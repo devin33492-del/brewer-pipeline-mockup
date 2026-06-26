@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Brewer Pipeline &#8212; Combined Design Mockup</title>
+<style>
+/* ==============================================================
+   DESIGN TOKENS
+   ============================================================== */
+:root {
+  --ccm-blue: #1032CF;
+  --ccm-blue-light: #0271E3;
+  --ccm-blue-dark: #0C28A0;
+  --ccm-accent: #4B9FFF;
+  --ccm-accent-light: #7DBDFF;
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F5F5F5;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #F0F0F0;
+  --border-subtle: #E2E2E2;
+  --text-primary: #1A1A1A;
+  --text-secondary: #555555;
+  --text-muted: #888888;
+  --success: #16a34a;
+  --warning: #d97706;
+  --danger: #dc2626;
+  --info: #2563eb;
+}
+[data-theme="dark"] {
+  --bg-primary: #111318;
+  --bg-secondary: #1C1F26;
+  --bg-card: #1C1F26;
+  --bg-card-hover: #252932;
+  --border-subtle: #2E3340;
+  --text-primary: #F0F0F0;
+  --text-secondary: #A0A8B8;
+  --text-muted: #6B7280;
+  --ccm-blue: #3D5FE8;
+  --ccm-blue-light: #4B9FFF;
+  --ccm-accent: #7DBDFF;
+  --ccm-accent-light: #A8D4FF;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --info: #60a5fa;
+}
+* { box-sizing: border-box; }
+html, body { overflow-x: hidden; }
+body {
+  margin: 0;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background .2s, color .2s;
+}
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-secondary); }
+::-webkit-scrollbar-thumb { background: #CCCCCC; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #AAAAAA; }
+select {
+  -webkit-appearance: none; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23555555' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px !important;
+}
+[data-theme="dark"] select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23A0A8B8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}
+@keyframes shimmer { 0%{background-position:0% 50%;} 50%{background-position:100% 50%;} 100%{background-position:0% 50%;} }
+@keyframes urgentPulse { 0%,100%{opacity:1;} 50%{opacity:.5;} }
+.urgent-pulse, .animate-pulse { animation: urgentPulse 2s ease-in-out infinite; }
+@keyframes ping { 75%,100%{ transform:scale(2); opacity:0; } }
+.animate-ping { animation: ping 1s cubic-bezier(0,0,0.2,1) infinite; }
+@keyframes loanPulse {
+  0%,100%{ box-shadow:0 0 8px rgba(59,130,246,.3),0 0 16px rgba(59,130,246,.15); border-color:rgba(59,130,246,.5); }
+  50%{ box-shadow:0 0 20px rgba(59,130,246,.6),0 0 40px rgba(59,130,246,.3),0 0 60px rgba(59,130,246,.15); border-color:rgba(59,130,246,.8); }
+}
+.loan-pulse { animation: loanPulse 1.5s ease-in-out infinite; }
+@keyframes startedFlash { 0%,100%{ background:transparent; } 50%{ background:rgba(239,68,68,.15); } }
+.started-flash { animation: startedFlash 1.2s ease-in-out infinite; }
+@keyframes pipelineClosingFlash { 0%,100%{ background:rgba(34,197,94,.08); } 50%{ background:rgba(34,197,94,.2); } }
+.pipeline-closing-flash { animation: pipelineClosingFlash 1.5s ease-in-out infinite; }
+@keyframes finalApprovedGlow {
+  0%,100%{ box-shadow:0 0 8px rgba(34,197,94,.3),0 0 16px rgba(34,197,94,.15); border-color:rgba(34,197,94,.5); }
+  50%{ box-shadow:0 0 20px rgba(34,197,94,.6),0 0 40px rgba(34,197,94,.3); border-color:rgba(34,197,94,.8); }
+}
+.final-approved-glow { animation: finalApprovedGlow 1.5s ease-in-out infinite; }
+@keyframes scheduleButtonShimmer { 0%{ background-position:-200% center; } 100%{ background-position:200% center; } }
+.schedule-closing-btn {
+  background:linear-gradient(90deg,#16a34a 0%,#22c55e 25%,#4ade80 50%,#22c55e 75%,#16a34a 100%);
+  background-size:200% 100%; animation:scheduleButtonShimmer 3s linear infinite;
+  color:white; font-weight:700; border:none; transition:opacity .2s;
+}
+.schedule-closing-btn:hover { opacity:.9; }
+@keyframes modalFadeIn { from{opacity:0;} to{opacity:1;} }
+@keyframes modalSlideUp { from{opacity:0;transform:translateY(16px) scale(.98);} to{opacity:1;transform:translateY(0) scale(1);} }
+@keyframes paletteIn { from{opacity:0;transform:translateY(-12px) scale(.97);} to{opacity:1;transform:translateY(0) scale(1);} }
+
+.stage-started{background:#EEF2FF;color:#4338CA;}
+.stage-uw-decisioned{background:#DBEAFE;color:#1E40AF;}
+.stage-red-zone{background:#FEE2E2;color:#B91C1C;}
+.stage-resub{background:#FEF3C7;color:#92400E;}
+.stage-ctc{background:#DCFCE7;color:#166534;}
+.stage-funded{background:#CCFBF1;color:#115E59;}
+[data-theme="dark"] .stage-started{background:rgba(67,56,202,.25);color:#a5b4fc;}
+[data-theme="dark"] .stage-uw-decisioned{background:rgba(30,64,175,.25);color:#93c5fd;}
+[data-theme="dark"] .stage-red-zone{background:rgba(185,28,28,.25);color:#fca5a5;}
+
+/* -- LAYOUT -- */
+.mockup-banner {
+  width:100%; text-align:center; font-size:11px; font-weight:600; letter-spacing:.04em;
+  padding:6px 12px; background:linear-gradient(90deg,var(--ccm-blue),var(--ccm-blue-light));
+  color:#fff; position:sticky; top:0; z-index:200;
+}
+.app { display:flex; min-height:100vh; }
+.sidebar {
+  width:240px; flex-shrink:0; background:var(--bg-secondary);
+  border-right:1px solid var(--border-subtle); display:flex; flex-direction:column;
+  position:sticky; top:34px; height:calc(100vh - 34px); overflow-y:auto;
+}
+.sidebar-header { display:flex; align-items:center; gap:12px; padding:16px; border-bottom:1px solid var(--border-subtle); }
+.logo-square {
+  flex-shrink:0; width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center;
+  background:linear-gradient(135deg,var(--ccm-blue),var(--ccm-blue-light));
+}
+.brand-name { font-size:13px; font-weight:700; color:var(--text-primary); margin:0; }
+.brand-sub { font-size:11px; color:var(--text-muted); margin:0; }
+.nav { flex:1; padding:8px 10px; display:flex; flex-direction:column; gap:1px; }
+.nav-section-label {
+  font-size:10px; font-weight:700; letter-spacing:.07em; text-transform:uppercase;
+  color:var(--text-muted); padding:10px 8px 4px;
+}
+.nav-item {
+  display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:8px;
+  font-size:13px; font-weight:500; color:var(--text-secondary); cursor:pointer;
+  text-decoration:none; transition:background .12s; background:transparent; border:none; text-align:left; width:100%;
+}
+.nav-item:hover { background:var(--bg-card-hover); }
+.nav-item.active { background:var(--ccm-blue); color:#fff; }
+.nav-item.active .nav-ico { color:#fff; }
+.nav-ico { flex-shrink:0; color:var(--text-muted); display:flex; }
+.nav-label { display:flex; align-items:center; gap:8px; flex:1; }
+.nav-badge {
+  display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px;
+  padding:0 4px; border-radius:9999px; font-size:10px; font-weight:700; background:#ef4444; color:#fff;
+}
+.nav-item.active .nav-badge { background:rgba(255,255,255,.28); }
+.pulse-dot { width:6px; height:6px; border-radius:50%; background:#ef4444; flex-shrink:0; }
+.user-area { padding:12px 10px; border-top:1px solid var(--border-subtle); }
+.user-row { display:flex; align-items:center; gap:10px; padding:6px 8px; border-radius:8px; }
+.user-row:hover { background:var(--bg-card-hover); }
+.avatar {
+  width:32px; height:32px; border-radius:9999px; display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:700; flex-shrink:0; color:#fff;
+  background:linear-gradient(135deg,var(--ccm-blue),var(--ccm-blue-light));
+}
+.user-name { font-size:12px; font-weight:600; color:var(--text-primary); margin:0; }
+.user-role { font-size:11px; color:var(--text-muted); margin:0; }
+
+/* Theme toggle */
+.theme-toggle {
+  margin-left:auto; padding:5px 8px; border-radius:8px; border:1px solid var(--border-subtle);
+  background:var(--bg-card); color:var(--text-secondary); cursor:pointer; font-size:14px;
+  display:flex; align-items:center; gap:5px; font-size:12px; font-weight:500; flex-shrink:0;
+  transition:background .15s;
+}
+.theme-toggle:hover { background:var(--bg-card-hover); }
+
+.main { flex:1; overflow:auto; background:var(--bg-primary); }
+.main-inner { max-width:80rem; margin:0 auto; padding:24px; }
+
+h1 { margin:0; }
+.muted { color:var(--text-muted); }
+.card { background:var(--bg-card); border:1px solid var(--border-subtle); border-radius:16px; }
+.flex { display:flex; }
+.between { justify-content:space-between; }
+.center { align-items:center; }
+.gap2 { gap:8px; } .gap3 { gap:12px; }
+.hidden { display:none !important; }
+
+.glow-border { position: relative; border: 1px solid var(--border-subtle); }
+.glow-border::before {
+  content:''; position:absolute; inset:-1px; border-radius:inherit; padding:1px;
+  background:linear-gradient(135deg,var(--ccm-blue),var(--ccm-accent),var(--ccm-blue));
+  background-size:200% 200%; animation:shimmer 3s ease infinite;
+  -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+  mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor; mask-composite:exclude; opacity:0; transition:opacity .3s ease; pointer-events:none;
+}
+.glow-border:hover::before { opacity:1; }
+
+/* -- Overview -- */
+.greeting { font-size:28px; font-weight:700; letter-spacing:-.02em; }
+.sub { font-size:13px; color:var(--text-secondary); margin-top:6px; }
+.section { border-radius:16px; padding:22px; margin-top:20px; }
+.section-title { font-size:14px; font-weight:600; color:var(--text-primary); margin:0; }
+.section-sub { font-size:12px; color:var(--text-muted); margin:2px 0 0; }
+.lo-select {
+  padding:8px 16px; border-radius:10px; font-size:13px; background:var(--bg-card);
+  border:1px solid var(--border-subtle); color:var(--text-primary); outline:none; cursor:pointer;
+}
+.kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+.kpi { border-radius:14px; padding:18px; background:var(--bg-card); border:1px solid var(--border-subtle); }
+.kpi .klbl { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--text-muted); margin:0; }
+.kpi .kval { font-size:24px; font-weight:700; margin:6px 0 0; }
+.na-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.na-card { padding:14px; border-radius:12px; border:1px solid var(--border-subtle); border-left-width:4px; background:var(--bg-secondary); cursor:pointer; }
+.na-name { font-size:14px; font-weight:600; margin:0; }
+.na-issue { font-size:12px; color:var(--text-secondary); margin:4px 0 0; }
+.na-lo { font-size:12px; color:var(--text-muted); margin:6px 0 0; }
+.closing-row { display:flex; align-items:center; justify-content:space-between; padding:14px; border-radius:8px; border:1px solid var(--border-subtle); background:var(--bg-secondary); margin-bottom:10px; cursor:pointer; }
+.funnel-row { margin-bottom:14px; cursor:pointer; }
+.funnel-bar-bg { height:30px; border-radius:8px; overflow:hidden; background:var(--bg-secondary); }
+.funnel-bar { height:100%; border-radius:8px; display:flex; align-items:center; padding:0 12px; }
+table { width:100%; border-collapse:collapse; font-size:14px; }
+.lo-table th { text-align:left; padding:11px 14px; font-size:11px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:.03em; }
+.lo-table td { padding:14px; border-bottom:1px solid var(--border-subtle); }
+.pill { display:inline-block; padding:3px 11px; border-radius:9999px; font-size:12px; font-weight:600; }
+
+/* -- Pipeline -- */
+.toolbar-title { font-size:20px; font-weight:700; }
+.view-toggle { display:flex; border-radius:8px; overflow:hidden; border:1px solid var(--border-subtle); }
+.view-toggle button { padding:6px 12px; font-size:12px; font-weight:500; border:none; cursor:pointer; background:transparent; color:var(--text-secondary); }
+.view-toggle button.active { background:var(--ccm-blue); color:#fff; }
+.filters { display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
+.search-wrap { position:relative; flex:1; min-width:220px; }
+.search-wrap svg { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--text-muted); }
+.search-input { width:100%; padding:9px 14px 9px 34px; border-radius:10px; font-size:13px; outline:none; background:var(--bg-card); border:1px solid var(--border-subtle); color:var(--text-primary); }
+.filter-select { padding:9px 14px; border-radius:10px; font-size:13px; outline:none; background:var(--bg-card); border:1px solid var(--border-subtle); color:var(--text-primary); min-width:150px; }
+.toggle-btn { padding:9px 12px; border-radius:10px; font-size:12px; font-weight:600; white-space:nowrap; cursor:pointer; background:var(--bg-card); border:1px solid var(--border-subtle); color:var(--text-secondary); }
+.stage-tabs { display:flex; gap:8px; margin:18px 0; overflow-x:auto; padding-bottom:4px; }
+.stage-tab { flex-shrink:0; border-radius:10px; padding:7px 12px; font-size:12px; font-weight:500; cursor:pointer; background:var(--bg-card); border:1px solid var(--border-subtle); color:var(--text-secondary); white-space:nowrap; }
+.board { display:flex; gap:12px; overflow-x:auto; padding-bottom:14px; min-height:380px; }
+.column { flex-shrink:0; width:272px; border-radius:12px; display:flex; flex-direction:column; background:var(--bg-secondary); border:1px solid var(--border-subtle); }
+.col-header { padding:12px; border-bottom:1px solid var(--border-subtle); }
+.col-cards { padding:8px; display:flex; flex-direction:column; gap:8px; overflow-y:auto; flex:1; max-height:calc(100vh - 420px); }
+.col-count { font-size:12px; padding:1px 8px; border-radius:9999px; font-weight:500; }
+
+.loan-card { border-radius:12px; cursor:pointer; transition:all .15s; background:var(--bg-card); border:1px solid var(--border-subtle); box-shadow:0 1px 3px rgba(0,0,0,.06); overflow:hidden; }
+.loan-card:hover { transform:translateY(-1px); box-shadow:0 4px 12px rgba(0,0,0,.10); }
+.loan-card .body { padding:12px; position:relative; }
+.lc-name { font-size:14px; font-weight:600; color:var(--text-primary); margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.lc-meta { font-size:12px; color:var(--text-muted); margin:2px 0 0; }
+.lc-avatar { width:28px; height:28px; border-radius:9999px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; flex-shrink:0; background:rgba(16,50,207,0.1); color:var(--ccm-blue); }
+.lc-amount { font-size:14px; font-weight:700; color:var(--ccm-accent); margin:0; }
+.purpose-pill { display:inline-flex; align-items:center; padding:2px 8px; border-radius:9999px; font-size:10px; font-weight:700; }
+.chip { display:inline-flex; align-items:center; gap:4px; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:600; }
+.vendor-badge { display:inline-flex; align-items:center; gap:2px; border-radius:6px; padding:2px 5px; font-size:8px; font-weight:700; line-height:1; white-space:nowrap; }
+.dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+
+/* -- Detail panel -- */
+.panel-overlay { position:fixed; inset:0; z-index:100; display:flex; justify-content:flex-end; background:rgba(0,0,0,.4); animation:modalFadeIn .2s; }
+.panel { width:100%; max-width:64rem; height:100%; overflow-y:auto; background:var(--bg-primary); animation:modalSlideUp .25s ease-out; }
+.panel-header { position:sticky; top:0; z-index:10; border-bottom:1px solid var(--border-subtle); background:var(--bg-primary); }
+.panel-tabs { display:flex; padding:0 16px; gap:4px; overflow-x:auto; }
+.panel-tab { padding:8px 12px; font-size:12px; font-weight:600; border-radius:8px 8px 0 0; cursor:pointer; white-space:nowrap; background:transparent; border:none; border-bottom:2px solid transparent; color:var(--text-muted); }
+.field-label { font-size:12px; color:var(--text-muted); margin:0 0 4px; }
+.field-value { border-radius:8px; padding:12px; cursor:pointer; border:1px solid transparent; background:var(--bg-secondary); }
+.field-value:hover { border-color:var(--ccm-blue); }
+.field-value p { margin:0; font-size:14px; font-weight:500; color:var(--text-primary); }
+.metric-tile { text-align:center; padding:8px; border-radius:8px; background:var(--bg-secondary); }
+.metric-tile .lbl { font-size:10px; font-weight:500; text-transform:uppercase; letter-spacing:.04em; color:var(--text-muted); margin:0; }
+.metric-tile .val { font-size:18px; font-weight:700; margin:2px 0 0; }
+.cond-row { display:flex; align-items:flex-start; gap:10px; border-radius:8px; padding:10px 12px; border:1px solid var(--border-subtle); background:var(--bg-card); }
+.cond-check { flex-shrink:0; margin-top:2px; width:18px; height:18px; border-radius:4px; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+.cond-filter { display:flex; border-radius:8px; overflow:hidden; border:1px solid var(--border-subtle); }
+.cond-filter button { padding:6px 12px; font-size:11px; font-weight:500; text-transform:capitalize; border:none; cursor:pointer; background:transparent; color:var(--text-secondary); }
+.btn-primary { background:var(--ccm-blue); color:#fff; border:none; border-radius:8px; padding:8px 16px; font-size:12px; font-weight:600; cursor:pointer; }
+.toast { position:fixed; bottom:24px; right:24px; z-index:300; padding:12px 20px; border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,.18); font-size:14px; font-weight:500; background:#1A1A1A; color:#fff; animation:modalSlideUp .25s; }
+[data-theme="dark"] .toast { background:#F0F0F0; color:#111; }
+
+/* light page tabs */
+.toolkit-tab, .help-tab, .settings-tab { padding:7px 13px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; border:none; background:transparent; color:var(--text-secondary); white-space:nowrap; }
+.toolkit-tab.active, .help-tab.active, .settings-tab.active { background:var(--ccm-blue); color:#fff; }
+
+/* -- Calls -- */
+.call-table th { text-align:left; padding:11px 14px; font-size:11px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:.03em; }
+.call-table td { padding:13px 14px; border-bottom:1px solid var(--border-subtle); font-size:13px; }
+.call-row { cursor:pointer; transition:background .12s; }
+.call-row:hover { background:var(--bg-secondary); }
+.call-row.active { background:rgba(16,50,207,.08); }
+.dir-pill { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:9999px; font-size:11px; font-weight:600; }
+.transcript-line { display:flex; gap:10px; margin-bottom:12px; }
+.transcript-spk { flex-shrink:0; font-size:11px; font-weight:700; width:74px; }
+.transcript-txt { font-size:13px; color:var(--text-secondary); line-height:1.45; }
+
+/* -- Quick Actions -- */
+.qa-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+.qa-tile {
+  border-radius:16px; padding:22px 18px; border:1px solid var(--border-subtle); background:var(--bg-card);
+  cursor:pointer; transition:all .15s; text-align:left;
+}
+.qa-tile:hover { transform:translateY(-2px); box-shadow:0 8px 22px rgba(0,0,0,.08); border-color:var(--ccm-accent); }
+.qa-icon { width:46px; height:46px; border-radius:12px; display:flex; align-items:center; justify-content:center; margin-bottom:14px; }
+.qa-title { font-size:15px; font-weight:600; margin:0; color:var(--text-primary); }
+.qa-sub { font-size:12px; color:var(--text-muted); margin:4px 0 0; }
+
+/* -- Personal -- */
+.personal-grid { display:grid; grid-template-columns:1.1fr 1fr; gap:16px; align-items:start; }
+.todo-item { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--bg-card); margin-bottom:8px; }
+.todo-check { width:20px; height:20px; border-radius:6px; border:2px solid var(--border-subtle); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; }
+.todo-check.done { background:var(--ccm-blue); border-color:var(--ccm-blue); }
+.todo-txt { font-size:13px; flex:1; color:var(--text-primary); }
+.todo-txt.done { text-decoration:line-through; color:var(--text-muted); }
+.notes-pad { width:100%; min-height:180px; border-radius:12px; border:1px solid var(--border-subtle); background:var(--bg-secondary); padding:14px; font-family:inherit; font-size:13px; line-height:1.5; color:var(--text-primary); resize:vertical; outline:none; }
+.weather-card { border-radius:16px; padding:22px; color:#fff; background:linear-gradient(135deg,#3a78d6 0%,#5b9be8 55%,#8fc0f5 100%); box-shadow:0 8px 24px rgba(58,120,214,.3); }
+
+/* -- Credit Pulls -- */
+.credit-pull-table th { text-align:left; padding:11px 14px; font-size:11px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:.03em; }
+.credit-pull-table td { padding:12px 14px; border-bottom:1px solid var(--border-subtle); font-size:13px; }
+
+/* -- Command palette -- */
+.palette-overlay { position:fixed; inset:0; z-index:300; display:flex; justify-content:center; align-items:flex-start; padding-top:84px; background:rgba(0,0,0,.4); animation:modalFadeIn .15s; }
+.palette {
+  width:min(560px,90%); background:var(--bg-card); border-radius:14px; overflow:hidden;
+  box-shadow:0 24px 70px rgba(0,0,0,.4); border:1px solid var(--border-subtle); animation:paletteIn .16s ease-out;
+}
+.palette-search { width:100%; border:none; outline:none; padding:16px 18px; font-size:16px; font-family:inherit; background:transparent; color:var(--text-primary); border-bottom:1px solid var(--border-subtle); }
+.palette-list { max-height:340px; overflow-y:auto; padding:6px; }
+.palette-group { font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--text-muted); padding:10px 12px 4px; }
+.palette-item { display:flex; align-items:center; gap:12px; padding:9px 12px; border-radius:8px; cursor:pointer; }
+.palette-item:hover, .palette-item.sel { background:rgba(16,50,207,.1); }
+.palette-item .pi-title { font-size:13px; font-weight:500; color:var(--text-primary); }
+.palette-item .pi-sub { font-size:11px; color:var(--text-muted); margin-left:auto; }
+
+/* -- Top toolbar area -- */
+.top-bar { display:flex; align-items:center; gap:8px; padding:10px 16px; border-bottom:1px solid var(--border-subtle); background:var(--bg-secondary); }
+.cmdk-chip {
+  display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:7px;
+  background:var(--bg-card); border:1px solid var(--border-subtle); font-size:11px; color:var(--text-secondary);
+  cursor:pointer; transition:all .12s;
+}
+.cmdk-chip:hover { background:var(--bg-card-hover); }
+.cmdk-chip kbd { font-family:inherit; font-size:11px; font-weight:600; color:var(--text-primary); }
+
+@media(max-width:980px){ .kpi-grid{grid-template-columns:repeat(2,1fr);} .na-grid{grid-template-columns:1fr;} .qa-grid{grid-template-columns:repeat(2,1fr);} .personal-grid{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+<div class="mockup-banner">BREWER PIPELINE &#8212; COMBINED DESIGN MOCKUP FOR INSELLERATE &#183; sample data, not connected to any live system</div>
+<div class="app">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo-square">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      </div>
+      <div style="min-width:0;flex:1;">
+        <p class="brand-name">Brewer Pipeline</p>
+        <p class="brand-sub">Branch 2036</p>
+      </div>
+    </div>
+    <nav class="nav" id="nav"></nav>
+    <div class="user-area">
+      <div class="user-row">
+        <div class="avatar">DB</div>
+        <div style="min-width:0;flex:1;">
+          <p class="user-name">Devin Brewer</p>
+          <p class="user-role">Manager</p>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0;">
+    <div class="top-bar">
+      <div class="cmdk-chip" id="cmdk-chip" title="Open command palette (&#8984;K)">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        Search <kbd>&#8984;K</kbd>
+      </div>
+      <div style="flex:1;"></div>
+      <button class="theme-toggle" id="theme-toggle" title="Toggle dark mode">
+        <span id="theme-icon">&#127769;</span>
+        <span id="theme-label">Dark</span>
+      </button>
+    </div>
+    <main class="main">
+      <div class="main-inner">
+        <section id="view-overview"></section>
+        <section id="view-pipeline" class="hidden"></section>
+        <section id="view-respa-sent" class="hidden"></section>
+        <section id="view-fender-bender" class="hidden"></section>
+        <section id="view-credit-pulls" class="hidden"></section>
+        <section id="view-performance" class="hidden"></section>
+        <section id="view-email-activity" class="hidden"></section>
+        <section id="view-calls" class="hidden"></section>
+        <section id="view-update-queue" class="hidden"></section>
+        <section id="view-help-queue" class="hidden"></section>
+        <section id="view-toolkit" class="hidden"></section>
+        <section id="view-quick-actions" class="hidden"></section>
+        <section id="view-personal" class="hidden"></section>
+        <section id="view-settings" class="hidden"></section>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div id="panel-root"></div>
+<div id="palette-root"></div>
+<div id="toast-root"></div>
+
+<script>
+/* \u2550\u2550 THEME TOGGLE \u2550\u2550 */
+var isDark = false;
+document.getElementById("theme-toggle").addEventListener("click", function(){
+  isDark = !isDark;
+  document.documentElement.setAttribute("data-theme", isDark ? "dark" : "light");
+  document.getElementById("theme-icon").textContent = isDark ? "\u2600\uFE0F" : "\uD83C\uDF19";
+  document.getElementById("theme-label").textContent = isDark ? "Light" : "Dark";
+});
+
+/* \u2550\u2550 FAKE DATA \u2550\u2550 */
+const LOAN_OFFICERS = ["Anthony Snodgrass","Austin Seifert","Evan Liddington","Jacob Fischer","Jerry Michael","John Quinones","Quincy Williams"];
+function daysFromNow(n){ const d=new Date(); d.setDate(d.getDate()+n); return d.toISOString().split("T")[0]; }
+function cond(id,desc,status,category,dueDate){ return {id,description:desc,status,category,dueDate}; }
+function loc(id,desc,status,createdBy,loNote){ return {id,description:desc,status,createdBy,loNote}; }
+
+const LOANS = [
+  { id:"l1", loanNumber:"1034000810112", borrowerName:"Marcus & Tina Holloway", propertyAddress:"4821 Brookhaven Dr, Columbus, OH 43230",
+    loanAmount:412000, loanType:"Conventional", stage:"Qualified", loanOfficer:"Austin Seifert", processor:"Megan Harvey",
+    closingDate:daysFromNow(34), rateLockExpiry:daysFromNow(28), daysInStage:2, urgency:"low", loanPurpose:"Purchase",
+    occupancy:"Owner Occupied", propertyType:"SFR", ausFindings:"AE", ltv:78, cltv:78, interestRate:6.625, dti:38,
+    creditScoreB1:752, appraisedValue:528000, notes:"Strong file. Purchase, 20% down.", numberOfBorrowers:2, borrowerMaritalStatus:"Married",
+    conditions:[], loConditions:[] },
+  { id:"l2", loanNumber:"1034000809447", borrowerName:"Priscilla Vance", propertyAddress:"77 Maplewood Ln, Cincinnati, OH 45209",
+    loanAmount:289500, loanType:"FHA", stage:"In Loan Setup", loanOfficer:"John Quinones", processor:"Dana Pruitt",
+    closingDate:daysFromNow(26), rateLockExpiry:daysFromNow(19), daysInStage:4, urgency:"medium", loanPurpose:"Cash Out",
+    occupancy:"Owner Occupied", propertyType:"SFR", ausFindings:"AE", ltv:84, cltv:84, interestRate:6.875, dti:43,
+    creditScoreB1:691, appraisedValue:345000, b1IncomeType:"Self-Employed", notes:"Self-employed, needs 2yr returns.", numberOfBorrowers:1, appraisalType:"Full",
+    conditions:[ cond("c1","2023 & 2022 federal tax returns (all schedules)","open","prior_to_docs",daysFromNow(5)),
+                 cond("c2","Most recent 2 months bank statements","open","prior_to_docs"),
+                 cond("c3","Letter of explanation for NSF on statement","cleared","prior_to_docs") ],
+    loConditions:[ loc("lc1","Confirm borrower received initial disclosures","open","Megan Harvey") ] },
+  { id:"l3", loanNumber:"1034000808991", borrowerName:"The Okafor Family Trust", propertyAddress:"1290 Riverstone Pkwy, Dublin, OH 43017",
+    loanAmount:735000, loanType:"Non-QM", stage:"In Underwriting", loanOfficer:"Evan Liddington", processor:"Carlos Reyes",
+    closingDate:daysFromNow(21), rateLockExpiry:daysFromNow(11), daysInStage:6, urgency:"high", loanPurpose:"Cash Out",
+    occupancy:"Investment", propertyType:"Multi-Family", ausFindings:"Refer", ltv:70, cltv:70, interestRate:7.99, dti:0,
+    creditScoreB1:738, appraisedValue:1050000, b1IncomeType:"1099", appraisalType:"Full", appraisalBack:"Yes", titleBack:"Yes",
+    notes:"Bank-statement program. Title back, awaiting clearance.", numberOfBorrowers:1,
+    conditions:[ cond("c4","12 months business bank statements","open","prior_to_docs"),
+                 cond("c5","CPA letter confirming 2yr self-employment","open","prior_to_docs",daysFromNow(3)),
+                 cond("c6","Rent roll for subject 4-unit","open","prior_to_funding"),
+                 cond("c7","Appraisal received \u2014 reviewed","cleared","prior_to_docs"),
+                 cond("c8","Entity docs for Family Trust","open","prior_to_closing") ],
+    loConditions:[ loc("lc2","Get updated insurance binder from borrower","open","Megan Harvey"),
+                   loc("lc3","Borrower says binder sent 6/24 \u2014 see email","done","Megan Harvey","Sent to processor, attached to file. -Evan") ] },
+  { id:"l4", loanNumber:"1034000808410", borrowerName:"Daniel & Rosa Iglesias", propertyAddress:"503 Sycamore Ct, Westerville, OH 43081",
+    loanAmount:355000, loanType:"VA", stage:"In Underwriting", loanOfficer:"Quincy Williams", processor:"Priya Nair",
+    closingDate:daysFromNow(18), rateLockExpiry:daysFromNow(2), daysInStage:5, urgency:"high", loanPurpose:"Purchase",
+    occupancy:"Owner Occupied", propertyType:"SFR", ausFindings:"AE", ltv:100, cltv:100, interestRate:6.25, dti:41,
+    creditScoreB1:704, appraisedValue:355000, appraisalType:"Full", appraisalBack:"Yes", notes:"VA purchase, 0 down. Lock expiring soon!", numberOfBorrowers:2, borrowerMaritalStatus:"Married",
+    conditions:[ cond("c9","Certificate of Eligibility (COE)","cleared","prior_to_docs"),
+                 cond("c10","Updated LES / pay stub","open","prior_to_docs",daysFromNow(2)),
+                 cond("c11","Termite inspection report","open","prior_to_closing") ],
+    loConditions:[] },
+  { id:"l5", loanNumber:"1034000807855", borrowerName:"Gregory Mensah", propertyAddress:"88 Lakehurst Ave, Akron, OH 44319",
+    loanAmount:198000, loanType:"IRRRL", stage:"UW Decisioned", loanOfficer:"Jerry Michael", processor:"Dana Pruitt",
+    closingDate:daysFromNow(15), rateLockExpiry:daysFromNow(9), daysInStage:3, urgency:"medium", loanPurpose:"IRRRL",
+    occupancy:"Owner Occupied", propertyType:"SFR", ausFindings:"AE", ltv:88, interestRate:5.75, notes:"VA streamline \u2014 appraisal waived.", numberOfBorrowers:1,
+    conditions:[ cond("c12","Recoupment worksheet signed","open","prior_to_docs"),
+                 cond("c13","Current mortgage statement","cleared","prior_to_docs") ],
+    loConditions:[] },
+  { id:"l6", loanNumber:"1034000807203", borrowerName:"Yvette Carrington", propertyAddress:"2140 Highgrove St, Toledo, OH 43615",
+    loanAmount:264000, loanType:"Conventional", stage:"UW Decisioned", loanOfficer:"Anthony Snodgrass", processor:"Megan Harvey",
+    closingDate:daysFromNow(12), rateLockExpiry:daysFromNow(-3), daysInStage:8, urgency:"critical", loanPurpose:"Rate and Term",
+    occupancy:"Owner Occupied", propertyType:"Condo", ausFindings:"AE", ltv:80, interestRate:6.75, dti:44,
+    creditScoreB1:668, appraisedValue:330000, appraisalType:"Full", appraisalBack:"Yes", notes:"Rate lock EXPIRED. Stuck 8 days.", numberOfBorrowers:1, pulse:"Yes",
+    conditions:[ cond("c14","Condo HOA cert & budget","open","prior_to_docs",daysFromNow(1)),
+                 cond("c15","Master insurance policy","open","prior_to_funding"),
+                 cond("c16","Updated VOE","open","prior_to_docs") ],
+    loConditions:[ loc("lc4","Reach borrower re: rate-lock extension cost","open","Megan Harvey") ] },
+  { id:"l7", loanNumber:"1034000806637", borrowerName:"Felix & Anna Brandt", propertyAddress:"915 Cobblestone Way, Hilliard, OH 43026",
+    loanAmount:521000, loanType:"Conventional", stage:"Conditions Submitted", loanOfficer:"Austin Seifert", processor:"Carlos Reyes",
+    closingDate:daysFromNow(9), rateLockExpiry:daysFromNow(6), daysInStage:2, urgency:"medium", loanPurpose:"Purchase",
+    occupancy:"Owner Occupied", propertyType:"SFR", ausFindings:"AE", ltv:75, interestRate:6.5, dti:36,
+    creditScoreB1:781, appraisedValue:695000, appraisalType:"PIW", titleCleared:"Yes", cdSent:"Yes", cdSigned:"No",
+    notes:"Conditions submitted, awaiting UW sign-off. PIW eligible.", numberOfBorrowers:2, borrowerMaritalStatus:"Married",
+    conditions:[ cond("c17","Final VOE","open","prior_to_funding"), cond("c18","Hazard insurance \u2014 1yr paid","cleared","prior_to_closing"), cond("c19","Source of large deposit","cleared","prior_to_docs") ],
+    loConditions:[] },
+  { id:"l8", loanNumber:"1034000806012", borrowerName:"Sandra Whitfield", propertyAddress:"60 Oakridge Blvd, Dayton, OH 45414",
+    loanAmount:172500, loanType:"FHA", stage:"Conditions Submitted", loanOfficer:"John Quinones", processor:"Priya Nair",
+    closingDate:daysFromNow(7), rateLockExpiry:daysFromNow(4), daysInStage:6, urgency:"high", loanPurpose:"Purchase",
+    occupancy:"Owner Occupied", propertyType:"Townhouse", ausFindings:"AE", ltv:96, interestRate:6.99, dti:45,
+    creditScoreB1:642, appraisedValue:180000, appraisalType:"Full", appraisalBack:"Yes", subjectToRepair:"Yes",
+    titleBack:"Yes", titleCleared:"Yes", cdSent:"Yes", cdSigned:"No",
+    notes:"Appraisal subject to repair (handrail). High LTV.", numberOfBorrowers:1,
+    conditions:[ cond("c20","Completion cert (handrail repair)","open","prior_to_closing",daysFromNow(2)), cond("c21","Gift letter + donor statement","cleared","prior_to_docs") ],
+    loConditions:[ loc("lc5","Schedule re-inspection with appraiser","open","Megan Harvey") ] },
+  { id:"l9", loanNumber:"1034000805488", borrowerName:"The Delacroix Group LLC", propertyAddress:"3300 Commerce Plaza, Cleveland, OH 44114",
+    loanAmount:1250000, loanType:"Non-QM", stage:"Docs Sent", loanOfficer:"Evan Liddington", processor:"Carlos Reyes",
+    closingDate:daysFromNow(5), rateLockExpiry:daysFromNow(12), daysInStage:1, urgency:"medium", loanPurpose:"Cash Out",
+    occupancy:"Investment", propertyType:"Multi-Family", ausFindings:null, ltv:65, interestRate:8.25,
+    creditScoreB1:760, appraisedValue:1950000, titleCleared:"Yes", appraisalBack:"Yes", cdSent:"Yes", cdSigned:"Yes",
+    notes:"DSCR commercial. Docs out for signing.", numberOfBorrowers:1,
+    conditions:[ cond("c22","Final title commitment","cleared","prior_to_docs"), cond("c23","Operating agreement","cleared","prior_to_docs") ],
+    loConditions:[] },
+  { id:"l10", loanNumber:"1034000804910", borrowerName:"Walter & June Pemberton", propertyAddress:"712 Harvest Moon Rd, Lancaster, OH 43130",
+    loanAmount:243000, loanType:"Conventional", stage:"Closing Requested", loanOfficer:"Quincy Williams", processor:"Megan Harvey",
+    closingDate:daysFromNow(3), rateLockExpiry:daysFromNow(8), daysInStage:1, urgency:"high", loanPurpose:"Rate and Term",
+    occupancy:"Owner Occupied", propertyType:"SFR", ausFindings:"AE", ltv:72, interestRate:6.375,
+    creditScoreB1:799, appraisedValue:340000, titleCleared:"Yes", appraisalBack:"Yes", cdSent:"Yes", cdSigned:"Yes",
+    notes:"Closing requested \u2014 on track for Friday.", numberOfBorrowers:2, borrowerMaritalStatus:"Married",
+    conditions:[ cond("c24","Closing protection letter","cleared","prior_to_closing") ], loConditions:[] },
+  { id:"l11", loanNumber:"1034000804233", borrowerName:"Imani Robeson", propertyAddress:"45 Birchfield Ct, Grove City, OH 43123",
+    loanAmount:318000, loanType:"Conventional", stage:"Final Approved", loanOfficer:"Jerry Michael", processor:"Dana Pruitt",
+    closingDate:daysFromNow(6), rateLockExpiry:daysFromNow(10), daysInStage:2, urgency:"medium", loanPurpose:"Purchase",
+    occupancy:"Owner Occupied", propertyType:"SFR", ausFindings:"AE", ltv:80, interestRate:6.5,
+    creditScoreB1:745, appraisedValue:398000, titleCleared:"Yes", appraisalBack:"Yes", cdSent:"Yes", cdSigned:"Yes",
+    finalApprovedAt:daysFromNow(-1), closingScheduled:false,
+    notes:"FINAL APPROVED \u2014 needs closing scheduled!", numberOfBorrowers:1, conditions:[], loConditions:[] },
+  { id:"l12", loanNumber:"1034000803771", borrowerName:"Hector & Lucia Mendez", propertyAddress:"2255 Stonegate Dr, Reynoldsburg, OH 43068",
+    loanAmount:227500, loanType:"FHA", stage:"Final Approved", loanOfficer:"Anthony Snodgrass", processor:"Priya Nair",
+    closingDate:daysFromNow(8), rateLockExpiry:daysFromNow(14), daysInStage:3, urgency:"low", loanPurpose:"Purchase",
+    occupancy:"Owner Occupied", propertyType:"SFR", ausFindings:"AE", ltv:96, interestRate:6.75,
+    creditScoreB1:688, appraisedValue:237000, titleCleared:"Yes", appraisalBack:"Yes", cdSent:"Yes", cdSigned:"Yes",
+    finalApprovedAt:daysFromNow(-2), closingScheduled:true,
+    notes:"Final approved, closing already scheduled.", numberOfBorrowers:2, borrowerMaritalStatus:"Married",
+    conditions:[], loConditions:[] },
+  { id:"l13", loanNumber:"1034000803102", borrowerName:"Brianna Coleslaw", propertyAddress:"19 Foxtail Run, Pickerington, OH 43147",
+    loanAmount:301000, loanType:"Conventional", stage:"UW Decisioned", loanOfficer:"Jacob Fischer", processor:"Carlos Reyes",
+    closingDate:daysFromNow(20), rateLockExpiry:daysFromNow(16), daysInStage:7, urgency:"high", loanPurpose:"Cash Out",
+    occupancy:"Owner Occupied", propertyType:"SFR", ausFindings:"Caution", ltv:82, interestRate:7.125, dti:46,
+    creditScoreB1:659, appraisedValue:367000, appraisalType:"Full", appraisalBack:"Yes", fenderBender:true,
+    fenderBenderNotes:"DTI over guideline \u2014 restructuring needed before resub.",
+    notes:"In Fender Bender \u2014 DTI issue.", numberOfBorrowers:1,
+    conditions:[ cond("c25","Pay down revolving debt to hit DTI","open","prior_to_docs"), cond("c26","Updated AUS after debt paydown","open","prior_to_docs") ],
+    loConditions:[ loc("lc6","Discuss debt-payoff plan with borrower","open","Megan Harvey") ] },
+  { id:"l14", loanNumber:"1034000802566", borrowerName:"Theodore Ashby", propertyAddress:"840 Wexford Pl, Powell, OH 43065",
+    loanAmount:625000, loanType:"Conventional", stage:"Qualified", loanOfficer:"John Quinones", processor:"Megan Harvey",
+    closingDate:daysFromNow(40), rateLockExpiry:daysFromNow(35), daysInStage:1, urgency:"low", loanPurpose:"Purchase",
+    occupancy:"Second Home", propertyType:"SFR", ausFindings:"AE", ltv:65, interestRate:6.5,
+    creditScoreB1:812, appraisedValue:960000, notes:"Jumbo-adjacent. Excellent credit.", numberOfBorrowers:1, conditions:[], loConditions:[] },
+  { id:"l15", loanNumber:"1034000801877", borrowerName:"Renata & Paul Drobny", propertyAddress:"126 Clearwater Dr, Marysville, OH 43040",
+    loanAmount:289000, loanType:"Conventional", stage:"Docs Sent", loanOfficer:"Austin Seifert", processor:"Dana Pruitt",
+    closingDate:daysFromNow(4), rateLockExpiry:daysFromNow(7), daysInStage:1, urgency:"medium", loanPurpose:"Purchase",
+    occupancy:"Owner Occupied", propertyType:"PUD", ausFindings:"AE", ltv:90, interestRate:6.625, dti:39,
+    creditScoreB1:723, appraisedValue:321000, titleCleared:"Yes", appraisalBack:"Yes", cdSent:"Yes", cdSigned:"No",
+    notes:"Docs sent, CD not signed yet \u2014 closing in 4d.", numberOfBorrowers:2, borrowerMaritalStatus:"Married",
+    conditions:[ cond("c27","Signed CD","open","prior_to_closing",daysFromNow(1)) ], loConditions:[] },
+];
+
+const STAGES = ["Qualified","In Loan Setup","In Underwriting","UW Decisioned","Conditions Submitted","Docs Sent","Closing Requested","Final Approved"];
+const stageConfig = {
+  "Qualified":{color:"#a5b4fc",bgColor:"rgba(165,180,252,0.12)",shortName:"Qualified"},
+  "In Loan Setup":{color:"#60a5fa",bgColor:"rgba(96,165,250,0.12)",shortName:"Loan Setup"},
+  "In Underwriting":{color:"#8b5cf6",bgColor:"rgba(139,92,246,0.12)",shortName:"In UW"},
+  "UW Decisioned":{color:"#1032CF",bgColor:"rgba(16,50,207,0.12)",shortName:"UW Dec"},
+  "Conditions Submitted":{color:"#f59e0b",bgColor:"rgba(245,158,11,0.12)",shortName:"Cond Sub"},
+  "Docs Sent":{color:"#5eead4",bgColor:"rgba(94,234,212,0.12)",shortName:"Docs Sent"},
+  "Closing Requested":{color:"#10b981",bgColor:"rgba(16,185,129,0.12)",shortName:"Closing Req"},
+  "Final Approved":{color:"#22c55e",bgColor:"rgba(34,197,94,0.12)",shortName:"Final Appr"},
+};
+const EMAIL_COUNTS = { l2:3, l3:7, l4:2, l6:5, l8:4, l9:6, l13:3, l15:2 };
+
+/* \u2500\u2500 Call records \u2500\u2500 */
+const CALL_RECORDS = [
+  { id:"call1", loanId:"l6", borrower:"Yvette Carrington", lo:"Anthony Snodgrass", direction:"outbound", duration:"7:42", date:daysFromNow(0)+" 09:14",
+    transcript:[
+      {spk:"Anthony (LO)", t:"Hi Yvette, it's Anthony from CrossCountry. I wanted to talk through the rate-lock situation on your refinance."},
+      {spk:"Borrower", t:"Oh yes, I got the email. It said the lock expired? I'm a little worried about that."},
+      {spk:"Anthony (LO)", t:"It did lapse, but we can extend it. There's a small extension fee \u2014 roughly a quarter point \u2014 and I'd rather lock that in now before rates move again."},
+      {spk:"Borrower", t:"Okay. What do you need from me to push it forward?"},
+      {spk:"Anthony (LO)", t:"Two things: the condo HOA certificate and budget, and the master insurance policy. Once underwriting has those we can clear conditions fast."},
+    ]},
+  { id:"call2", loanId:"l4", borrower:"Daniel Iglesias", lo:"Quincy Williams", direction:"inbound", duration:"4:18", date:daysFromNow(0)+" 08:31",
+    transcript:[
+      {spk:"Borrower", t:"Hey Quincy, just checking \u2014 the lock is about to expire on our VA loan?"},
+      {spk:"Quincy (LO)", t:"You're two days out but we're in good shape. I need your updated LES and most recent pay stub."},
+      {spk:"Borrower", t:"I can get those off the military pay portal tonight."},
+    ]},
+  { id:"call3", loanId:"l8", borrower:"Sandra Whitfield", lo:"John Quinones", direction:"outbound", duration:"6:05", date:daysFromNow(-1)+" 15:47",
+    transcript:[
+      {spk:"John (LO)", t:"Sandra, the appraisal came back subject to repair \u2014 there's a missing handrail on the back steps."},
+      {spk:"Borrower", t:"Oh, that's an easy fix. My brother-in-law can install one this weekend."},
+      {spk:"John (LO)", t:"Great. Once it's done we'll order a re-inspection so the appraiser can sign off, then we're clear to close."},
+    ]},
+  { id:"call4", loanId:"l1", borrower:"Marcus Holloway", lo:"Austin Seifert", direction:"inbound", duration:"3:22", date:daysFromNow(-1)+" 11:09",
+    transcript:[
+      {spk:"Borrower", t:"Hi Austin, quick question about closing costs \u2014 are they about what we estimated?"},
+      {spk:"Austin (LO)", t:"They're right in line with the estimate I sent. Strong file, twenty percent down, nothing unexpected."},
+    ]},
+  { id:"call5", loanId:"l3", borrower:"E. Okafor", lo:"Evan Liddington", direction:"outbound", duration:"9:51", date:daysFromNow(-2)+" 13:30",
+    transcript:[
+      {spk:"Evan (LO)", t:"Underwriting needs twelve months of business statements and a CPA letter confirming two years self-employed."},
+      {spk:"Borrower", t:"My accountant can write that letter. I'll send everything in one package by Thursday."},
+    ]},
+  { id:"call6", loanId:"l13", borrower:"Brianna Coleslaw", lo:"Jacob Fischer", direction:"inbound", duration:"5:40", date:daysFromNow(-2)+" 10:02",
+    transcript:[
+      {spk:"Borrower", t:"Jacob, I got a note that my loan hit a snag. What's going on?"},
+      {spk:"Jacob (LO)", t:"Your debt-to-income came in a little over guideline. The good news is we can fix it by paying down a couple of revolving balances."},
+    ]},
+  { id:"call7", loanId:"l10", borrower:"Walter Pemberton", lo:"Quincy Williams", direction:"outbound", duration:"2:55", date:daysFromNow(-3)+" 16:20",
+    transcript:[
+      {spk:"Quincy (LO)", t:"Good news Walter \u2014 your closing is requested and we're on track for Friday."},
+      {spk:"Borrower", t:"Wonderful. Anything left for us to do?"},
+      {spk:"Quincy (LO)", t:"Just bring a government ID and a cashier's check for the final figure I'll send tomorrow."},
+    ]},
+];
+
+/* \u2500\u2500 Credit Pull data \u2500\u2500 */
+const CREDIT_PULLS = [
+  {id:"cp1",borrower:"Marcus & Tina Holloway",lo:"Austin Seifert",datePulled:daysFromNow(-3),bureau:"Tri-merge",fico:752,status:"Pitched",loanId:"l1"},
+  {id:"cp2",borrower:"Priscilla Vance",lo:"John Quinones",datePulled:daysFromNow(-5),bureau:"Tri-merge",fico:691,status:"Pulled",loanId:"l2"},
+  {id:"cp3",borrower:"Daniel & Rosa Iglesias",lo:"Quincy Williams",datePulled:daysFromNow(-7),bureau:"Tri-merge",fico:704,status:"Pitched",loanId:"l4"},
+  {id:"cp4",borrower:"Gregory Mensah",lo:"Jerry Michael",datePulled:daysFromNow(-8),bureau:"Experian",fico:688,status:"Pitched",loanId:"l5"},
+  {id:"cp5",borrower:"Yvette Carrington",lo:"Anthony Snodgrass",datePulled:daysFromNow(-10),bureau:"Tri-merge",fico:668,status:"Pitched",loanId:"l6"},
+  {id:"cp6",borrower:"Sandra Whitfield",lo:"John Quinones",datePulled:daysFromNow(-12),bureau:"Tri-merge",fico:642,status:"Pitched",loanId:"l8"},
+  {id:"cp7",borrower:"Brianna Coleslaw",lo:"Jacob Fischer",datePulled:daysFromNow(-14),bureau:"Equifax",fico:659,status:"Pitched",loanId:"l13"},
+  {id:"cp8",borrower:"Theodore Ashby",lo:"John Quinones",datePulled:daysFromNow(-2),bureau:"Tri-merge",fico:812,status:"Pitched",loanId:"l14"},
+  {id:"cp9",borrower:"Unassigned Lead A",lo:"Austin Seifert",datePulled:daysFromNow(-4),bureau:"Tri-merge",fico:614,status:"No Contact"},
+  {id:"cp10",borrower:"Unassigned Lead B",lo:"Jerry Michael",datePulled:daysFromNow(-6),bureau:"TransUnion",fico:590,status:"Dead"},
+];
+
+/* \u2550\u2550 UTILITIES \u2550\u2550 */
+const TODAY = new Date().toISOString().split("T")[0];
+function fmtCur(n){ if(n===0)return "$0"; if(n>=1e6)return "$"+(n/1e6).toFixed(1)+"M"; if(n>=1e3)return "$"+Math.round(n/1e3).toLocaleString()+"k"; return "$"+n.toLocaleString(); }
+function fmtFull(n){ return new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",maximumFractionDigits:0}).format(n); }
+function initials(name){ if(name==="Anthony Snodgrass")return "AN"; return name.split(" ").map(function(n){return n[0];}).join("").toUpperCase().slice(0,2); }
+function daysUntil(d){ if(!d)return 999; return Math.ceil((new Date(d).getTime()-new Date(TODAY).getTime())/(1000*60*60*24)); }
+function pluralize(c,s){ return c===1?s:s+"s"; }
+function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function openCond(l){ return (l.conditions||[]).filter(function(c){return c.status==="open";}).length; }
+function openLoCond(l){ return (l.loConditions||[]).filter(function(c){return c.status==="open";}).length; }
+function getAppraisalWaiverLabel(l){ if((l.loanPurpose||"").toLowerCase().includes("streamline"))return "Streamline"; if((l.loanType||"").toUpperCase()==="IRRRL")return "IRRRL"; if((l.appraisalType||"").toUpperCase()==="PIW")return "PIW"; return null; }
+function getCDWarning(l){ if(l.cdSent==="Yes"&&l.cdSigned!=="Yes"&&l.closingDate){ const d=daysUntil(l.closingDate); if(d>=0&&d<=3)return "critical"; if(d>=0&&d<=7)return "warning"; } if((l.borrowerMaritalStatus||"").includes("Married")&&(l.numberOfBorrowers||0)<2)return "info"; return null; }
+const ORDERED = new Set(["In Underwriting","UW Decisioned","Conditions Submitted","Final Approved","Docs Sent","Closing Requested","Clear to Close"]);
+function getTitleStatus(l){ if(l.titleCleared==="Yes")return "green"; if(l.titleBack==="Yes")return "red"; if(ORDERED.has(l.stage||""))return "yellow"; return "gray"; }
+function getAppraisalStatus(l){ if(l.appraisalBack==="Yes"&&l.subjectToRepair==="Yes")return "red"; if(l.appraisalBack==="Yes")return "green"; if(l.appraisalType||ORDERED.has(l.stage||""))return "yellow"; return "gray"; }
+function shouldGlowGreen(l){ return l.stage==="Final Approved" && !l.closingScheduled; }
+
+const statusColors={green:{bg:"rgba(34,197,94,0.15)",text:"#22c55e",border:"rgba(34,197,94,0.3)"},yellow:{bg:"rgba(234,179,8,0.15)",text:"#eab308",border:"rgba(234,179,8,0.3)"},red:{bg:"rgba(239,68,68,0.15)",text:"#ef4444",border:"rgba(239,68,68,0.3)"},gray:{bg:"rgba(107,114,128,0.1)",text:"#6b7280",border:"rgba(107,114,128,0.2)"}};
+const vendorAccent={FST:"#1e40af",DOMA:"#7c3aed",BLUEBIRD:"#3b82f6",PIW:"#22c55e",ACE:"#22c55e"};
+const vendorIcons={FST:'<path d="M3 21h18M5 21V7l8-4 8 4v14M9 21v-6h6v6"/>',BLUEBIRD:'<path d="M21 10c0 6-9 12-9 12S3 16 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>',PIW:'<path d="M9 12l2 2 4-4"/><path d="M12 2a10 10 0 100 20 10 10 0 000-20z"/>'};
+
+function vendorBadge(vendor,status,tooltip){
+  const c=statusColors[status]; const lbl=vendor==="BLUEBIRD"?"AMC":vendor; const icon=vendorIcons[vendor]||"";
+  return '<div class="vendor-badge" title="'+esc(tooltip)+'" style="background:'+c.bg+';border:1px solid '+c.border+';color:'+c.text+';">'+
+    (icon?'<span style="color:'+(status==="gray"?"#6b7280":vendorAccent[vendor])+';display:flex;align-items:center;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">'+icon+'</svg></span>':"")+
+    '<span>'+lbl+'</span></div>';
+}
+function titleBadge(l){
+  const st=getTitleStatus(l); const lbl=st==="green"?"Cleared":st==="yellow"?"Ordered":st==="red"?"Issues":"Not Started";
+  let vendor="FST"; if((l.titleCompany||"").toUpperCase().includes("DOMA"))vendor="DOMA";
+  return vendorBadge(vendor,st,vendor+" Title: "+lbl);
+}
+function appraisalBadge(l){
+  const w=getAppraisalWaiverLabel(l);
+  if(w==="PIW")return vendorBadge("PIW","green","Property Inspection Waiver \u2014 no appraisal needed");
+  if(w==="Streamline"||w==="IRRRL")return '<div style="display:inline-block;padding:2px 5px;border-radius:4px;font-size:8px;font-weight:700;background:rgba(34,197,94,0.15);color:#22c55e;border:1px solid rgba(34,197,94,0.3);">'+w+'</div>';
+  const st=getAppraisalStatus(l); const lbl=st==="green"?"Back":st==="yellow"?"Ordered":st==="red"?"Subject to Repair":"Not Ordered";
+  return vendorBadge("BLUEBIRD",st,"Appraisal: "+lbl);
+}
+function rateLockIcon(days,size){
+  size=size||16; let color,title;
+  if(days===999){color="#6b7280";title="No rate lock";}
+  else if(days<0){color="#ef4444";title="Rate lock expired "+Math.abs(days)+" days ago";}
+  else{color="#3b82f6";title="Rate lock: "+days+" days remaining";}
+  const disp=days===999?"\u2014":"("+days+")";
+  return '<span class="flex center" style="gap:2px;" title="'+esc(title)+'"><svg width="'+size+'" height="'+size+'" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;"><rect x="4" y="11" width="16" height="10" rx="2" fill="'+color+'"/><path d="M8 11V7a4 4 0 1 1 8 0v4" stroke="'+color+'" stroke-width="2.5" fill="none" stroke-linecap="round"/><circle cx="12" cy="16" r="1.5" fill="white"/></svg>'+(days!==999?'<span style="font-size:11px;font-weight:700;color:'+color+';line-height:1;">'+disp+'</span>':"")+'</span>';
+}
+const urgencyColors={critical:"#ef4444",high:"#f59e0b",medium:"#eab308",low:"#6ee7b7"};
+function urgencyDot(u){ return '<div class="dot '+(u==="critical"?"animate-pulse":"")+'" style="background:'+(urgencyColors[u]||"#666")+';"></div>'; }
+const purposeStyles={
+  "Purchase":{background:"rgba(34,197,94,0.15)",color:"#16a34a",border:"1px solid rgba(34,197,94,0.4)"},
+  "Cash Out":{background:"rgba(59,130,246,0.12)",color:"#3b82f6",border:"1px solid rgba(59,130,246,0.3)"},
+  "Rate and Term":{background:"rgba(168,85,247,0.12)",color:"#a855f7",border:"1px solid rgba(168,85,247,0.3)"},
+  "Streamline":{background:"rgba(245,158,11,0.12)",color:"#f59e0b",border:"1px solid rgba(245,158,11,0.3)"},
+  "IRRRL":{background:"rgba(236,72,153,0.12)",color:"#ec4899",border:"1px solid rgba(236,72,153,0.3)"},
+};
+
+/* \u2550\u2550 NAV \u2550\u2550 */
+const ic={
+  overview:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+  pipeline:'<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
+  respa:'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',
+  fender:'<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>',
+  credit:'<rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>',
+  performance:'<path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/>',
+  email:'<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>',
+  calls:'<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/>',
+  updateQueue:'<path d="M16 3h5v5"/><path d="M8 3H3v5"/><path d="M12 22v-8.3a4 4 0 0 0-1.172-2.872L3 3"/><path d="m15 9 6-6"/>',
+  helpQueue:'<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>',
+  toolkit:'<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>',
+  quickActions:'<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+  personal:'<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  settings:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
+};
+const fbCount = LOANS.filter(function(l){return l.fenderBender;}).length + 2;
+
+const NAV_SECTIONS = [
+  { label:"Team", items:[
+    {key:"overview", label:"Overview", icon:ic.overview},
+    {key:"pipeline", label:"Pipeline", icon:ic.pipeline},
+    {key:"respa-sent", label:"RESPA Sent", icon:ic.respa, badge:2},
+    {key:"fender-bender", label:"Fender Bender", icon:ic.fender, badge:fbCount},
+    {key:"credit-pulls", label:"Credit Pulls", icon:ic.credit},
+  ]},
+  { label:"Insights", items:[
+    {key:"performance", label:"Performance", icon:ic.performance},
+    {key:"email-activity", label:"Email Activity", icon:ic.email, badge:5},
+    {key:"calls", label:"Calls", icon:ic.calls},
+  ]},
+  { label:"Manage", items:[
+    {key:"update-queue", label:"Update Queue", icon:ic.updateQueue, badge:3},
+    {key:"help-queue", label:"Help Queue", icon:ic.helpQueue, badge:3},
+    {key:"toolkit", label:"Toolkit", icon:ic.toolkit},
+  ]},
+  { label:"Personal", items:[
+    {key:"quick-actions", label:"Quick Actions", icon:ic.quickActions},
+    {key:"personal", label:"Personal", icon:ic.personal},
+    {key:"settings", label:"Settings", icon:ic.settings},
+  ]},
+];
+const ALL_NAV = NAV_SECTIONS.reduce(function(a,s){return a.concat(s.items);}, []);
+
+let currentView = "overview";
+function renderNav(){
+  document.getElementById("nav").innerHTML = NAV_SECTIONS.map(function(sec){
+    return '<div class="nav-section-label">'+sec.label+'</div>'+sec.items.map(function(n){
+      const active = n.key===currentView;
+      return '<button class="nav-item '+(active?"active":"")+'" data-view="'+n.key+'">'+
+        '<span class="nav-ico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+n.icon+'</svg></span>'+
+        '<span class="nav-label">'+n.label+(n.badge&&!active?'<span class="pulse-dot"></span>':"")+'</span>'+
+        (n.badge?'<span class="nav-badge">'+n.badge+'</span>':"")+'</button>';
+    }).join("");
+  }).join("");
+  document.querySelectorAll(".nav-item").forEach(function(b){ b.addEventListener("click",function(){ switchView(b.dataset.view); }); });
+}
+
+function switchView(key){
+  currentView = key;
+  ALL_NAV.forEach(function(n){ const el=document.getElementById("view-"+n.key); if(el)el.classList.toggle("hidden", n.key!==key); });
+  document.querySelector(".main").scrollTop = 0;
+  renderNav();
+  const map = {
+    overview:renderOverview, pipeline:renderPipeline, "respa-sent":renderRespaSent,
+    "fender-bender":renderFenderBender, "credit-pulls":renderCreditPulls,
+    performance:renderPerformance, "email-activity":renderEmailActivity, calls:renderCalls,
+    "update-queue":renderUpdateQueue, "help-queue":renderHelpQueue, toolkit:renderToolkit,
+    "quick-actions":renderQuickActions, personal:renderPersonal, settings:renderSettings
+  };
+  if(map[key]) map[key]();
+}
+
+/* \u2550\u2550 PAGE HEADER HELPER \u2550\u2550 */
+function pageHeader(title,sub){ return '<div style="margin-bottom:22px;"><h1 style="font-size:26px;font-weight:700;letter-spacing:-.02em;color:var(--text-primary);">'+title+'</h1>'+(sub?'<p class="sub">'+sub+'</p>':"")+'</div>'; }
+
+/* \u2550\u2550 OVERVIEW \u2550\u2550 */
+var overviewLO = "all";
+function renderOverview(){
+  const loans = overviewLO==="all"?LOANS:LOANS.filter(function(l){return l.loanOfficer===overviewLO;});
+  const totalVolume = loans.reduce(function(s,l){return s+l.loanAmount;},0);
+  const hour = new Date().getHours();
+  const greeting = hour<12?"Good morning":hour<17?"Good afternoon":"Good evening";
+  const dateStr = new Date().toLocaleDateString("en-US",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
+
+  const expired = loans.filter(function(l){return daysUntil(l.rateLockExpiry)<0;});
+  const closingSoon = loans.filter(function(l){ const d=daysUntil(l.closingDate); return d>0&&d<=3; });
+  const stuck = loans.filter(function(l){return l.daysInStage>=7;});
+  const needs = [].concat(
+    expired.map(function(l){return {loan:l,issue:"Rate lock expired",days:Math.abs(daysUntil(l.rateLockExpiry)),color:"var(--danger)"};}),
+    closingSoon.map(function(l){return {loan:l,issue:"Closing in "+daysUntil(l.closingDate)+" "+pluralize(daysUntil(l.closingDate),"day"),days:daysUntil(l.closingDate),color:"var(--warning)"};}),
+    stuck.map(function(l){return {loan:l,issue:"Stuck "+l.daysInStage+" days in "+l.stage,days:l.daysInStage,color:"var(--info)"};})
+  ).slice(0,8);
+
+  const upcoming = loans.filter(function(l){ const d=daysUntil(l.closingDate); return d>0&&d<=7; }).sort(function(a,b){return daysUntil(a.closingDate)-daysUntil(b.closingDate);}).slice(0,5);
+  const funnelStages = STAGES;
+  const maxVol = Math.max.apply(null, funnelStages.map(function(st){return loans.filter(function(l){return l.stage===st;}).reduce(function(s,l){return s+l.loanAmount;},0);}).concat([1]));
+
+  const fakeMetric={"Austin Seifert":{calls:14,pulls:6,proc:3,conv:62},"John Quinones":{calls:11,pulls:5,proc:2,conv:55},"Evan Liddington":{calls:9,pulls:4,proc:3,conv:58},"Quincy Williams":{calls:12,pulls:5,proc:2,conv:48},"Jerry Michael":{calls:8,pulls:3,proc:1,conv:44},"Anthony Snodgrass":{calls:10,pulls:4,proc:2,conv:51},"Jacob Fischer":{calls:7,pulls:2,proc:1,conv:39}};
+  const loRows = LOAN_OFFICERS.map(function(lo){ const ll=LOANS.filter(function(l){return l.loanOfficer===lo;}); const vol=ll.reduce(function(s,l){return s+l.loanAmount;},0); const fm=fakeMetric[lo]; return {lo:lo,pipeline:ll.length,vol:vol,calls:fm.calls,pulls:fm.pulls,proc:fm.proc,conv:fm.conv}; }).sort(function(a,b){return b.vol-a.vol;});
+
+  let html = '<div class="flex between center" style="gap:12px;flex-wrap:wrap;margin-bottom:4px;">'+
+    '<div><h1 class="greeting">'+greeting+', Devin</h1><p class="sub">'+dateStr+' \u00B7 '+loans.length+' active '+pluralize(loans.length,"loan")+' \u00B7 '+fmtCur(totalVolume)+'</p></div>'+
+    '<select class="lo-select" id="ov-lo"><option value="all">All Loan Officers</option>'+LOAN_OFFICERS.map(function(lo){return '<option value="'+lo+'"'+(lo===overviewLO?" selected":"")+'>'+lo+'</option>';}).join("")+'</select></div>';
+
+  if(needs.length){
+    html += '<div class="section card" style="margin-top:20px;"><div class="flex center" style="gap:10px;margin-bottom:16px;"><div style="width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:rgba(220,38,38,0.1);color:var(--danger);flex-shrink:0;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><div><h2 class="section-title">Needs Attention</h2><p class="section-sub">'+needs.length+' '+pluralize(needs.length,"item")+' requiring action</p></div></div>'+
+      '<div class="na-grid">'+needs.map(function(it){return '<div class="na-card" data-loan="'+it.loan.id+'" style="border-left-color:'+it.color+';">'+
+        '<p class="na-name">'+esc(it.loan.borrowerName)+'</p><p class="na-issue">'+esc(it.issue)+'</p><p class="na-lo">'+esc(it.loan.loanOfficer)+'</p></div>';}).join("")+'</div></div>';
+  }
+
+  html += '<div class="section card"><div class="flex between center" style="margin-bottom:16px;"><h2 class="section-title">Upcoming Closings</h2><span class="pill" style="background:rgba(16,50,207,0.12);color:var(--ccm-blue);">'+upcoming.length+'</span></div>'+
+    (upcoming.length?upcoming.map(function(l){ const d=daysUntil(l.closingDate); const c=d<=2?"var(--danger)":d<=5?"var(--warning)":"var(--success)"; return '<div class="closing-row" data-loan="'+l.id+'">'+
+      '<div style="flex:1;min-width:0;"><p style="font-size:14px;font-weight:500;margin:0;color:var(--text-primary);">'+esc(l.borrowerName)+'</p>'+
+      '<p style="font-size:12px;color:var(--text-muted);margin:4px 0 0;">'+new Date(l.closingDate).toLocaleDateString("en-US",{month:"short",day:"numeric"})+' \u00B7 '+esc(l.loanOfficer)+'</p></div>'+
+      '<div style="text-align:center;margin-left:12px;"><p style="font-size:12px;font-weight:600;margin:0 0 4px;color:var(--text-muted);">Closing in</p><p style="font-size:18px;font-weight:700;margin:0;color:'+c+';">'+d+'d</p></div></div>';}).join("")
+    :'<p style="font-size:12px;text-align:center;padding:24px;color:var(--text-muted);">No closings in next 7 days</p>')+'</div>';
+
+  html += '<div class="section card"><div class="flex between center" style="margin-bottom:20px;"><div><h2 class="section-title">Pipeline Funnel</h2><p class="section-sub">Volume by stage</p></div><span style="font-size:12px;padding:6px 12px;border-radius:8px;background:rgba(75,159,255,0.1);color:var(--ccm-accent);cursor:pointer;" data-goto="pipeline">View all \u2192</span></div>'+
+    funnelStages.map(function(st){ const sl=loans.filter(function(l){return l.stage===st;}); const vol=sl.reduce(function(s,l){return s+l.loanAmount;},0); const pct=maxVol>0?(vol/maxVol)*100:0; return '<div class="funnel-row" data-goto="pipeline"><div class="flex between center" style="margin-bottom:6px;"><div><p style="font-size:13px;font-weight:600;margin:0;color:var(--text-primary);">'+st+'</p><p style="font-size:11px;color:var(--text-muted);margin:2px 0 0;">'+sl.length+' '+pluralize(sl.length,"loan")+'</p></div><p style="font-size:13px;font-weight:700;margin:0;color:var(--ccm-accent);">'+fmtCur(vol)+'</p></div><div class="funnel-bar-bg"><div class="funnel-bar" style="width:'+Math.max(pct,6)+'%;background:linear-gradient(90deg,var(--ccm-blue),var(--ccm-blue-light));"><span style="font-size:11px;font-weight:700;color:#fff;">'+pct.toFixed(0)+'%</span></div></div></div>';}).join("")+'</div>';
+
+  html += '<div class="section card"><h2 class="section-title" style="margin-bottom:16px;">Loan Officer Performance</h2><div style="overflow-x:auto;"><table class="lo-table"><thead><tr><th>Loan Officer</th><th style="text-align:center;">Pipeline</th><th style="text-align:center;">Calls</th><th style="text-align:center;">Credit Pulls</th><th style="text-align:center;">\u2192 Processing</th><th style="text-align:center;">Conv. Rate</th><th style="text-align:right;">Volume</th></tr></thead><tbody>'+
+    loRows.map(function(r){return '<tr><td><div class="flex center" style="gap:10px;"><div class="avatar">'+initials(r.lo)+'</div><span style="font-weight:500;color:var(--text-primary);">'+r.lo+'</span></div></td>'+
+      '<td style="text-align:center;color:var(--text-secondary);">'+r.pipeline+'</td><td style="text-align:center;color:var(--text-secondary);">'+r.calls+'</td>'+
+      '<td style="text-align:center;color:var(--info);font-weight:600;cursor:pointer;" data-goto="credit-pulls">'+r.pulls+'</td>'+
+      '<td style="text-align:center;color:'+(r.proc>0?"var(--success)":"var(--text-muted)")+';font-weight:600;">'+r.proc+'</td>'+
+      '<td style="text-align:center;"><span class="pill" style="background:'+(r.conv>=50?"rgba(34,197,94,0.15)":"rgba(245,158,11,0.15)")+';color:'+(r.conv>=50?"var(--success)":"var(--warning)")+';">'+r.conv+'%</span></td>'+
+      '<td style="text-align:right;font-weight:600;color:var(--ccm-accent);">'+fmtCur(r.vol)+'</td></tr>';}).join("")+'</tbody></table></div></div></div>';
+
+  document.getElementById("view-overview").innerHTML = html;
+  document.getElementById("ov-lo").addEventListener("change",function(e){ overviewLO=e.target.value; renderOverview(); });
+  document.querySelectorAll("#view-overview [data-loan]").forEach(function(el){ el.addEventListener("click",function(){ openPanel(el.dataset.loan); }); });
+  document.querySelectorAll("#view-overview [data-goto]").forEach(function(el){ el.addEventListener("click",function(){ switchView(el.dataset.goto); }); });
+}
+
+
+/* \u2550\u2550 PIPELINE \u2550\u2550 */
+var pipeView="kanban", pipeStage="all", pipeSearch="", pipeLO="all", pipeHideExpired=false, pipePurchases=false;
+function loanCardHTML(loan){
+  const daysToLock=daysUntil(loan.rateLockExpiry), daysToClose=daysUntil(loan.closingDate);
+  const oc=openCond(loan), olc=openLoCond(loan);
+  const cdW=getCDWarning(loan); const glow=shouldGlowGreen(loan); const pulse=loan.pulse==="Yes";
+  const cls=glow?"final-approved-glow":pulse?"loan-pulse":"";
+  const border=glow?"rgba(34,197,94,0.5)":pulse?"rgba(59,130,246,0.6)":cdW==="critical"?"rgba(239,68,68,0.5)":"var(--border-subtle)";
+  const shadow=glow?"0 0 8px rgba(34,197,94,0.3),0 0 16px rgba(34,197,94,0.15)":pulse?"0 0 12px rgba(59,130,246,0.4)":"0 1px 3px rgba(0,0,0,.06)";
+  const pp=loan.loanPurpose?(purposeStyles[loan.loanPurpose]||{background:"rgba(107,114,128,0.1)",color:"#6b7280",border:"1px solid rgba(107,114,128,0.2)"}):null;
+  const ltvColor=loan.ltv?(loan.ltv>95?"#ef4444":loan.ltv>80?"#f59e0b":"var(--text-muted)"):"";
+  const ltvBg=loan.ltv?(loan.ltv>95?"rgba(239,68,68,0.1)":loan.ltv>80?"rgba(245,158,11,0.08)":"rgba(107,114,128,0.08)"):"";
+  const emailCount=EMAIL_COUNTS[loan.id]||0;
+  let chips="";
+  if(daysToClose<=14&&daysToClose>=0) chips+='<span class="chip" style="background:'+(daysToClose<=3?"rgba(239,68,68,0.12)":daysToClose<=7?"rgba(245,158,11,0.12)":"rgba(59,130,246,0.08)")+';color:'+(daysToClose<=3?"#ef4444":daysToClose<=7?"#f59e0b":"#3b82f6")+';"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>'+daysToClose+'d close</span>';
+  if(daysToLock!==999) chips+=rateLockIcon(daysToLock,16);
+  if(oc>0) chips+='<span class="chip" style="background:rgba(239,68,68,0.12);color:#ef4444;">'+oc+' UW</span>';
+  if(olc>0) chips+='<span class="chip" style="background:rgba(139,92,246,0.12);color:#8b5cf6;">'+olc+' LO</span>';
+  if((loan.loConditions||[]).some(function(c){return c.loNote;})) chips+='<span class="chip" style="background:rgba(59,130,246,0.12);color:#3b82f6;border:1px solid rgba(59,130,246,0.3);">\uD83D\uDCAC LO Reply</span>';
+  if(cdW==="critical") chips+='<span class="chip animate-pulse" style="background:rgba(239,68,68,0.12);color:#ef4444;">CD!</span>';
+  if(loan.daysInStage>=5) chips+='<span class="chip" style="background:rgba(245,158,11,0.08);color:#f59e0b;">'+loan.daysInStage+'d stale</span>';
+  if(loan.fenderBender) chips+='<span class="chip" style="background:rgba(251,191,36,0.15);color:#f59e0b;border:1px solid rgba(251,191,36,0.3);font-weight:700;">\uD83D\uDD27 FB</span>';
+  if(loan.stage==="Final Approved"&&!loan.closingScheduled) chips+='<span class="chip animate-pulse" style="background:rgba(34,197,94,0.15);color:#16a34a;border:1px solid rgba(34,197,94,0.4);font-weight:700;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Schedule</span>';
+  if(emailCount>0) chips+='<span class="chip" style="background:rgba(59,130,246,0.08);color:#3b82f6;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="3" width="20" height="14" rx="2"/><polyline points="2 3 12 10 22 3"/></svg>'+emailCount+'</span>';
+
+  let preview="";
+  if(oc>0||olc>0){
+    let inner="";
+    if(oc>0){ const list=(loan.conditions||[]).filter(function(c){return c.status==="open";}); inner+='<div><span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#ef4444;">UW Conds</span><div>'+list.slice(0,3).map(function(c){return '<p style="font-size:10px;color:var(--text-secondary);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">\u00B7 '+esc(c.description)+'</p>';}).join("")+'</div></div>'; }
+    if(olc>0){ const list2=(loan.loConditions||[]).filter(function(c){return c.status==="open";}); inner+='<div><span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#8b5cf6;">LO Conds</span><div>'+list2.slice(0,2).map(function(c){return '<p style="font-size:10px;color:var(--text-secondary);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">\u00B7 '+esc(c.description)+'</p>';}).join("")+'</div></div>'; }
+    preview='<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border-subtle);">'+inner+'</div>';
+  }
+  return '<div class="loan-card '+cls+'" data-loan="'+loan.id+'" style="border:1px solid '+border+';box-shadow:'+shadow+'"><div class="body">'+
+    '<div class="flex between" style="gap:8px;margin-bottom:6px;"><div style="min-width:0;flex:1;"><div class="flex center" style="gap:6px;">'+urgencyDot(loan.urgency)+'<p class="lc-name">'+esc(loan.borrowerName)+'</p></div><p class="lc-meta">#'+loan.loanNumber+' \u00B7 '+(loan.loanType||"\u2014")+'</p></div><div class="lc-avatar" title="'+esc(loan.loanOfficer)+'">'+initials(loan.loanOfficer)+'</div></div>'+
+    (pp?'<div style="margin-bottom:6px;"><span class="purpose-pill" style="background:'+pp.background+';color:'+pp.color+';border:'+pp.border+';">'+loan.loanPurpose+'</span></div>':"")+
+    (loan.b1IncomeType&&loan.b1IncomeType!=="W2"?'<div style="margin-bottom:6px;"><span class="purpose-pill" style="background:rgba(245,158,11,0.12);color:#d97706;border:1px solid rgba(245,158,11,0.3);">'+loan.b1IncomeType+'</span></div>':"")+
+    '<div class="flex between center" style="gap:8px;margin-bottom:8px;"><div class="flex center" style="gap:6px;"><p class="lc-amount">'+fmtFull(loan.loanAmount)+'</p>'+(loan.ltv?'<span style="font-size:10px;font-weight:600;padding:2px 4px;border-radius:4px;background:'+ltvBg+';color:'+ltvColor+';">'+loan.ltv.toFixed(0)+'%</span>':"")+
+    '</div><div class="flex center" style="gap:4px;">'+titleBadge(loan)+appraisalBadge(loan)+'</div></div>'+
+    '<div class="flex center" style="flex-wrap:wrap;gap:6px;">'+chips+'</div>'+preview+'</div></div>';
+}
+function pipeFiltered(){
+  var f=LOANS.slice();
+  if(pipeLO!=="all") f=f.filter(function(l){return l.loanOfficer===pipeLO;});
+  if(pipeSearch.trim()){ var q=pipeSearch.toLowerCase(); f=f.filter(function(l){return l.borrowerName.toLowerCase().indexOf(q)>=0||l.loanNumber.indexOf(q)>=0||(l.propertyAddress||"").toLowerCase().indexOf(q)>=0;}); }
+  if(pipeStage!=="all") f=f.filter(function(l){return l.stage===pipeStage;});
+  if(pipeHideExpired) f=f.filter(function(l){return daysUntil(l.rateLockExpiry)>=0;});
+  if(pipePurchases) f=f.filter(function(l){return l.loanPurpose==="Purchase";});
+  return f;
+}
+function renderPipeline(){
+  var filtered=pipeFiltered();
+  var totalVolume=filtered.reduce(function(s,l){return s+l.loanAmount;},0);
+  var stageSummary=STAGES.map(function(st){ var ins=filtered.filter(function(l){return l.stage===st;}); return {stage:st,count:ins.length,volume:ins.reduce(function(s,l){return s+l.loanAmount;},0)}; });
+
+  var board=STAGES.map(function(stage){
+    if(pipeStage!=="all"&&pipeStage!==stage)return "";
+    var sl=filtered.filter(function(l){return l.stage===stage;}); var cfg=stageConfig[stage];
+    var vol=sl.reduce(function(s,l){return s+l.loanAmount;},0);
+    return '<div class="column"><div class="col-header"><div class="flex between center" style="margin-bottom:4px;"><div class="flex center" style="gap:8px;"><div style="width:10px;height:10px;border-radius:50%;background:'+cfg.color+';"></div><span style="font-size:13px;font-weight:600;color:var(--text-primary);">'+cfg.shortName+'</span></div><span class="col-count" style="background:'+cfg.bgColor+';color:'+cfg.color+';">'+sl.length+'</span></div><p style="font-size:11px;color:var(--text-muted);margin:0;">'+(vol>0?fmtCur(vol):"\u2014")+'</p></div><div class="col-cards">'+(sl.length?sl.map(loanCardHTML).join(""):'<p style="text-align:center;font-size:12px;padding:24px;color:var(--text-muted);">No loans</p>')+'</div></div>';
+  }).join("");
+
+  var tableRows=filtered.map(function(l){
+    var dl=daysUntil(l.rateLockExpiry), dc=daysUntil(l.closingDate); var cfg=stageConfig[l.stage]||{color:"#666",bgColor:"#eee",shortName:l.stage};
+    return '<tr data-loan="'+l.id+'" style="cursor:pointer;"><td style="padding:12px;"><div class="flex center" style="gap:8px;">'+urgencyDot(l.urgency)+'<div><div style="font-weight:600;font-size:13px;color:var(--text-primary);">'+esc(l.borrowerName)+'</div><div style="font-size:11px;color:var(--text-muted);">#'+l.loanNumber+'</div></div></div></td>'+
+      '<td style="padding:12px;"><span class="pill" style="background:'+cfg.bgColor+';color:'+cfg.color+';font-size:11px;">'+cfg.shortName+'</span></td>'+
+      '<td style="padding:12px;font-size:13px;color:var(--text-secondary);">'+l.loanType+'</td>'+
+      '<td style="padding:12px;font-size:13px;font-weight:600;color:var(--ccm-accent);">'+fmtFull(l.loanAmount)+'</td>'+
+      '<td style="padding:12px;font-size:12px;color:var(--text-secondary);">'+esc(l.loanOfficer)+'</td>'+
+      '<td style="padding:12px;">'+rateLockIcon(dl,14)+'</td>'+
+      '<td style="padding:12px;font-size:12px;color:'+(dc<=3?"#ef4444":dc<=7?"#f59e0b":"var(--text-muted)")+';">'+(l.closingDate?new Date(l.closingDate).toLocaleDateString("en-US",{month:"short",day:"numeric"}):"\u2014")+'</td>'+
+      '<td style="padding:12px;"><div class="flex center" style="gap:4px;">'+titleBadge(l)+appraisalBadge(l)+'</div></td></tr>';
+  }).join("");
+
+  var h='<div class="flex between center" style="margin-bottom:16px;flex-wrap:wrap;gap:12px;"><h1 class="toolbar-title" style="color:var(--text-primary);">Pipeline</h1>'+
+    '<div class="flex center" style="gap:10px;flex-wrap:wrap;"><div class="view-toggle"><button class="'+(pipeView==="kanban"?"active":"")+'" data-vt="kanban">Board</button><button class="'+(pipeView==="table"?"active":"")+'" data-vt="table">Table</button></div>'+
+    '<span style="font-size:13px;font-weight:600;color:var(--ccm-accent);">'+filtered.length+' loans \u00B7 '+fmtCur(totalVolume)+'</span></div></div>'+
+    '<div class="filters"><div class="search-wrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><input class="search-input" id="pipe-search" placeholder="Search borrower, loan #..." value="'+esc(pipeSearch)+'"/></div>'+
+    '<select class="filter-select" id="pipe-lo"><option value="all">All LOs</option>'+LOAN_OFFICERS.map(function(lo){return '<option value="'+lo+'"'+(lo===pipeLO?" selected":"")+'>'+lo+'</option>';}).join("")+'</select>'+
+    '<select class="filter-select" id="pipe-stage"><option value="all">All Stages</option>'+STAGES.map(function(s){return '<option value="'+s+'"'+(s===pipeStage?" selected":"")+'>'+s+'</option>';}).join("")+'</select>'+
+    '<button class="toggle-btn'+(pipeHideExpired?" active":"")+'" id="pipe-expired" style="'+(pipeHideExpired?"background:rgba(239,68,68,0.1);color:#ef4444;border-color:rgba(239,68,68,0.3);":"")+'">Hide Expired Locks</button>'+
+    '<button class="toggle-btn'+(pipePurchases?" active":"")+'" id="pipe-purchases" style="'+(pipePurchases?"background:rgba(34,197,94,0.1);color:#16a34a;border-color:rgba(34,197,94,0.3);":"")+'">Purchases Only</button></div>'+
+    '<div class="stage-tabs">'+[{key:"all",label:"All Stages"}].concat(STAGES.map(function(s){return {key:s,label:s};})).map(function(t){return '<div class="stage-tab'+(t.key===pipeStage?" active":"")+' '+(t.key===pipeStage?"":"")+'" data-stab="'+t.key+'" style="'+(t.key===pipeStage?"background:var(--ccm-blue);color:#fff;border-color:var(--ccm-blue);":"")+'">'+t.label+'</div>';}).join("")+'</div>'+
+    '<div id="pipe-board" style="display:'+(pipeView==="kanban"?"flex":"none")+';"><div class="board">'+board+'</div></div>'+
+    '<div id="pipe-table" style="display:'+(pipeView==="table"?"block":"none")+';"><div class="card" style="overflow:hidden;overflow-x:auto;"><table><thead><tr style="border-bottom:1px solid var(--border-subtle);"><th style="padding:12px;font-size:11px;color:var(--text-muted);text-align:left;">Borrower</th><th style="padding:12px;font-size:11px;color:var(--text-muted);">Stage</th><th style="padding:12px;font-size:11px;color:var(--text-muted);">Type</th><th style="padding:12px;font-size:11px;color:var(--text-muted);">Amount</th><th style="padding:12px;font-size:11px;color:var(--text-muted);">LO</th><th style="padding:12px;font-size:11px;color:var(--text-muted);">Lock</th><th style="padding:12px;font-size:11px;color:var(--text-muted);">Closing</th><th style="padding:12px;font-size:11px;color:var(--text-muted);">Vendors</th></tr></thead><tbody>'+tableRows+'</tbody></table></div></div>';
+
+  document.getElementById("view-pipeline").innerHTML = h;
+  document.querySelectorAll("[data-vt]").forEach(function(b){ b.addEventListener("click",function(){ pipeView=b.dataset.vt; renderPipeline(); }); });
+  document.getElementById("pipe-search").addEventListener("input",function(e){ pipeSearch=e.target.value; renderPipeline(); });
+  document.getElementById("pipe-lo").addEventListener("change",function(e){ pipeLO=e.target.value; renderPipeline(); });
+  document.getElementById("pipe-stage").addEventListener("change",function(e){ pipeStage=e.target.value; renderPipeline(); });
+  document.getElementById("pipe-expired").addEventListener("click",function(){ pipeHideExpired=!pipeHideExpired; renderPipeline(); });
+  document.getElementById("pipe-purchases").addEventListener("click",function(){ pipePurchases=!pipePurchases; renderPipeline(); });
+  document.querySelectorAll("[data-stab]").forEach(function(b){ b.addEventListener("click",function(){ pipeStage=b.dataset.stab; renderPipeline(); }); });
+  document.querySelectorAll("#view-pipeline [data-loan]").forEach(function(el){ el.addEventListener("click",function(){ openPanel(el.dataset.loan); }); });
+  document.querySelectorAll("#view-pipeline [data-loan]").forEach(function(el){ el.addEventListener("click",function(){ openPanel(el.dataset.loan); }); });
+}
+
+/* \u2550\u2550 LOAN DETAIL PANEL \u2550\u2550 */
+var panelLoan=null, panelTab="details", condFilter="all";
+function openPanel(id){ panelLoan=LOANS.filter(function(l){return l.id===id;})[0]; panelTab="details"; condFilter="all"; renderPanel(); }
+function closePanel(){ panelLoan=null; document.getElementById("panel-root").innerHTML=""; }
+function field(label,value,type){
+  var disp=value||"\u2014";
+  if(type==="currency"&&value)disp=fmtFull(Number(value));
+  if(type==="date"&&value)disp=new Date(value).toLocaleDateString();
+  return '<div class="field"><p class="field-label">'+label+'</p><div class="field-value"><p>'+esc(String(disp))+'</p></div></div>';
+}
+function renderPanel(){
+  if(!panelLoan){ document.getElementById("panel-root").innerHTML=""; return; }
+  var l=panelLoan; var daysToLock=daysUntil(l.rateLockExpiry);
+  var conds=l.conditions||[]; var oc=conds.filter(function(c){return c.status==="open";}).length, cc=conds.filter(function(c){return c.status==="cleared";}).length, wc=conds.filter(function(c){return c.status==="waived";}).length;
+  var loConds=l.loConditions||[]; var olc=loConds.filter(function(c){return c.status==="open";}).length;
+  var emailCount=EMAIL_COUNTS[l.id]||0;
+  var tabs=[
+    {key:"details",label:"Loan Info"},{key:"readiness",label:"Title & Appraisal"},
+    {key:"conditions",label:"UW Conditions ("+oc+")"},{key:"lo_conditions",label:"LO Notes ("+olc+")"},
+    {key:"transcripts",label:"Call Transcripts"},{key:"email",label:"Email"+(emailCount>0?" ("+emailCount+")":"")},
+  ];
+  var body="";
+  if(panelTab==="details") body=detailsTab(l,daysToLock,oc,cc,wc);
+  else if(panelTab==="readiness") body=readinessTab(l);
+  else if(panelTab==="conditions") body=conditionsTab(l,oc,cc,wc);
+  else if(panelTab==="lo_conditions") body=loConditionsTab(l);
+  else if(panelTab==="transcripts") body=transcriptsTab(l);
+  else if(panelTab==="email") body=emailTab(l);
+
+  document.getElementById("panel-root").innerHTML='<div class="panel-overlay" id="panel-overlay"><div class="panel" id="panel-inner">'+
+    '<div class="panel-header"><div class="flex between center" style="padding:16px 16px 8px;">'+
+      '<div><h2 style="font-size:18px;font-weight:700;margin:0;color:var(--text-primary);">'+esc(l.borrowerName)+'</h2><p style="font-size:13px;color:var(--text-muted);margin:2px 0 0;">#'+l.loanNumber+' \u00B7 '+l.loanType+' \u00B7 '+fmtFull(l.loanAmount)+'</p></div>'+
+      '<button id="panel-close" style="padding:8px;border-radius:8px;border:none;background:transparent;cursor:pointer;color:var(--text-secondary);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>'+
+    '<div class="panel-tabs">'+tabs.map(function(t){var active=panelTab===t.key; var ac=t.key==="lo_conditions"?"#8b5cf6":"var(--ccm-blue)"; return '<button class="panel-tab" data-tab="'+t.key+'" style="'+(active?"color:"+ac+";border-bottom:2px solid "+ac+";":"")+'">'+t.label+'</button>';}).join("")+'</div></div>'+
+    body+'</div></div>';
+
+  document.getElementById("panel-overlay").addEventListener("click",function(e){ if(e.target.id==="panel-overlay")closePanel(); });
+  document.getElementById("panel-close").addEventListener("click",closePanel);
+  document.querySelectorAll(".panel-tab").forEach(function(b){ b.addEventListener("click",function(){ panelTab=b.dataset.tab; renderPanel(); }); });
+  document.querySelectorAll(".cond-filter button").forEach(function(b){ b.addEventListener("click",function(){ condFilter=b.dataset.cf; renderPanel(); }); });
+  document.querySelectorAll("[data-toggle-cond]").forEach(function(b){ b.addEventListener("click",function(){
+    var cid=b.dataset.toggleCond; var c=(panelLoan.conditions||[]).filter(function(x){return x.id===cid;})[0];
+    if(c){ c.status=c.status==="open"?"cleared":"open"; renderPanel(); toast(c.status==="cleared"?"Condition cleared":"Condition reopened"); }
+  }); });
+  document.querySelectorAll("[data-tab2]").forEach(function(b){ b.addEventListener("click",function(){ panelTab=b.dataset.tab2; renderPanel(); }); });
+  var sched=document.getElementById("schedule-closing-btn");
+  if(sched) sched.addEventListener("click",function(){ toast("Closing scheduler modal would open here"); });
+}
+
+function detailsTab(l,daysToLock,oc,cc,wc){
+  var showMetrics=l.ltv||l.interestRate||l.dti;
+  return '<div style="padding:16px;display:flex;flex-direction:column;gap:16px;">'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">'+
+      field("Stage",l.stage)+field("LO",l.loanOfficer)+field("Processor",l.processor)+field("Loan Type",l.loanType)+
+      field("Loan Amount",l.loanAmount,"currency")+field("Urgency",l.urgency)+
+      field("Closing Date",l.closingDate,"date")+
+      '<div class="flex center" style="gap:8px;"><div style="flex:1;">'+field("Rate Lock Expiry",l.rateLockExpiry,"date")+'</div>'+rateLockIcon(daysToLock,20)+'</div>'+
+      field("Occupancy",l.occupancy)+field("Property Type",l.propertyType)+field("AUS Findings",l.ausFindings)+
+    '</div>'+
+    field("Notes",l.notes)+
+    (showMetrics?'<div class="card" style="padding:16px;"><h3 style="font-size:14px;font-weight:600;margin:0 0 12px;color:var(--text-primary);">Loan Metrics</h3><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">'+
+      (l.interestRate?'<div class="metric-tile"><p class="lbl">Rate</p><p class="val">'+l.interestRate.toFixed(3)+'%</p></div>':"")+
+      (l.ltv?'<div class="metric-tile"><p class="lbl">LTV</p><p class="val" style="color:'+(l.ltv>95?"#ef4444":l.ltv>80?"#f59e0b":"var(--text-primary)")+';">'+l.ltv.toFixed(1)+'%</p></div>':"")+
+      (l.dti?'<div class="metric-tile"><p class="lbl">DTI</p><p class="val">'+l.dti.toFixed(1)+'%</p></div>':"")+
+      '</div>'+((l.creditScoreB1||l.appraisedValue)?'<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:8px;">'+
+        (l.creditScoreB1?'<div class="metric-tile"><p class="lbl">FICO</p><p class="val" style="color:'+(l.creditScoreB1>=740?"#22c55e":l.creditScoreB1>=680?"#f59e0b":"#ef4444")+';">'+l.creditScoreB1+'</p></div>':"")+
+        (l.appraisedValue?'<div class="metric-tile"><p class="lbl">Appraised</p><p class="val" style="font-size:14px;">$'+(l.appraisedValue/1000).toFixed(0)+'K</p></div>':"")+
+      '</div>':"")+'</div>':"")+
+    (l.propertyAddress?'<div class="card" style="padding:16px;"><h3 style="font-size:14px;font-weight:600;margin:0 0 8px;color:var(--text-primary);">Property Address</h3><p style="font-size:14px;color:var(--text-secondary);margin:0;">'+esc(l.propertyAddress)+'</p></div>':"")+
+    ((l.conditions||[]).length?'<div class="card" style="padding:16px;cursor:pointer;" data-tab2="conditions"><div class="flex between center" style="margin-bottom:8px;"><h3 style="font-size:14px;font-weight:600;margin:0;color:var(--text-primary);">Conditions Summary</h3><span style="font-size:12px;padding:2px 8px;border-radius:9999px;background:rgba(16,50,207,0.1);color:var(--ccm-blue);">View All \u2192</span></div>'+
+      '<div class="flex" style="gap:12px;"><div class="flex center" style="gap:6px;"><div class="dot" style="background:#ef4444;"></div><span style="font-size:12px;color:var(--text-secondary);">'+oc+' Open</span></div><div class="flex center" style="gap:6px;"><div class="dot" style="background:#22c55e;"></div><span style="font-size:12px;color:var(--text-secondary);">'+cc+' Cleared</span></div></div></div>':"")+
+    '<div><h3 style="font-size:14px;font-weight:600;margin:0 0 12px;color:var(--text-primary);">CD Status</h3><div class="card" style="padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:16px;">'+field("CD Sent",l.cdSent)+field("CD Signed",l.cdSigned)+'</div></div>'+
+    (l.stage==="Final Approved"&&!l.closingScheduled?'<button id="schedule-closing-btn" class="schedule-closing-btn" style="width:100%;padding:10px;border-radius:12px;font-size:14px;cursor:pointer;"><span style="display:inline-flex;align-items:center;gap:8px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Schedule Closing</span></button>':"")+
+  '</div>';
+}
+function readinessTab(l){
+  return '<div style="padding:16px;display:flex;flex-direction:column;gap:24px;">'+
+    '<div><h3 style="font-size:14px;font-weight:600;margin:0 0 12px;color:var(--text-primary);">Appraisal</h3><div class="card" style="padding:16px;"><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">'+field("Appraisal Back",l.appraisalBack)+field("Appraisal Type",l.appraisalType)+field("Subject to Repair",l.subjectToRepair)+field("Appraised Value",l.appraisedValue,"currency")+'</div><div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border-subtle);">'+appraisalBadge(l)+'<span style="margin-left:8px;font-size:13px;color:var(--text-secondary);">Vendor status badge</span></div></div></div>'+
+    '<div><h3 style="font-size:14px;font-weight:600;margin:0 0 12px;color:var(--text-primary);">Title</h3><div class="card" style="padding:16px;"><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">'+field("Title Back",l.titleBack)+field("Title Cleared",l.titleCleared)+field("Title Company","FST")+field("Vesting Match",l.vestingMatch)+'</div><div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border-subtle);">'+titleBadge(l)+'<span style="margin-left:8px;font-size:13px;color:var(--text-secondary);">FST Title status</span></div></div></div></div>';
+}
+function conditionsTab(l,oc,cc,wc){
+  var conds=l.conditions||[]; var total=conds.length;
+  var catLabels={prior_to_docs:{label:"Prior to Docs",color:"#8b5cf6",bg:"rgba(139,92,246,0.12)"},prior_to_funding:{label:"Prior to Funding",color:"#f59e0b",bg:"rgba(245,158,11,0.12)"},prior_to_closing:{label:"Prior to Closing",color:"#ef4444",bg:"rgba(239,68,68,0.12)"}};
+  var filtered2=condFilter==="all"?conds:conds.filter(function(c){return c.status===condFilter;});
+  var grouped={prior_to_docs:filtered2.filter(function(c){return c.category==="prior_to_docs";}),prior_to_funding:filtered2.filter(function(c){return c.category==="prior_to_funding";}),prior_to_closing:filtered2.filter(function(c){return c.category==="prior_to_closing";})};
+  var listHtml="";
+  if(filtered2.length===0){ listHtml='<div style="text-align:center;padding:32px;"><p style="font-size:14px;color:var(--text-muted);">No '+condFilter+' conditions</p></div>'; }
+  else { listHtml=Object.keys(grouped).map(function(cat){ var arr=grouped[cat]; if(!arr.length)return ""; var cfg=catLabels[cat];
+      return '<div><div class="flex center" style="gap:8px;margin-bottom:8px;"><div style="padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:'+cfg.bg+';color:'+cfg.color+';">'+cfg.label+'</div><div style="flex:1;height:1px;background:var(--border-subtle);"></div><span style="font-size:10px;color:var(--text-muted);">'+arr.filter(function(c){return c.status==="open";}).length+'/'+arr.length+' open</span></div>'+
+      '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">'+arr.map(function(c){return '<div class="cond-row" style="background:'+(c.status==="cleared"?"rgba(34,197,94,0.04)":"var(--bg-card)")+';border-color:'+(c.status==="cleared"?"rgba(34,197,94,0.15)":"var(--border-subtle)")+';">'+
+        '<div class="cond-check" data-toggle-cond="'+c.id+'" style="border:'+(c.status==="cleared"?"none":"2px solid var(--border-subtle)")+';background:'+(c.status==="cleared"?"#22c55e":"transparent")+';">'+(c.status==="cleared"?'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>':"")+'</div>'+
+        '<div style="flex:1;min-width:0;"><p style="font-size:14px;line-height:1.35;margin:0;color:'+(c.status==="cleared"?"var(--text-muted)":"var(--text-primary)")+';text-decoration:'+(c.status==="cleared"?"line-through":"none")+';">'+esc(c.description)+'</p>'+
+        (c.dueDate?'<p style="font-size:10px;margin:2px 0 0;color:'+(daysUntil(c.dueDate)<=3?"#ef4444":"var(--text-muted)")+';">Due: '+c.dueDate+'</p>':"")+'</div></div>';}).join("")+'</div></div>';}).join(""); }
+  return '<div style="padding:16px;display:flex;flex-direction:column;gap:16px;">'+
+    '<div class="flex center" style="gap:8px;">'+
+    '<div style="flex:1;border-radius:12px;padding:12px;text-align:center;background:rgba(239,68,68,0.08);"><p style="font-size:18px;font-weight:700;margin:0;color:#ef4444;">'+oc+'</p><p style="font-size:10px;margin:0;color:#ef4444;">Open</p></div>'+
+    '<div style="flex:1;border-radius:12px;padding:12px;text-align:center;background:rgba(34,197,94,0.08);"><p style="font-size:18px;font-weight:700;margin:0;color:#22c55e;">'+cc+'</p><p style="font-size:10px;margin:0;color:#22c55e;">Cleared</p></div>'+
+    '<div style="flex:1;border-radius:12px;padding:12px;text-align:center;background:rgba(16,50,207,0.08);"><p style="font-size:18px;font-weight:700;margin:0;color:var(--ccm-blue);">'+total+'</p><p style="font-size:10px;margin:0;color:var(--ccm-blue);">Total</p></div></div>'+
+    '<div class="flex between center"><div class="cond-filter">'+["all","open","cleared"].map(function(f){return '<button data-cf="'+f+'" style="'+(condFilter===f?"background:var(--ccm-blue);color:#fff;":"color:var(--text-secondary);")+'">'+f+'</button>';}).join("")+'</div>'+
+    '<button class="btn-primary">+ Add</button></div>'+listHtml+'</div>';
+}
+function loConditionsTab(l){
+  var loConds=l.loConditions||[];
+  return '<div style="padding:16px;display:flex;flex-direction:column;gap:12px;">'+
+    '<div class="flex between center"><h3 style="font-size:14px;font-weight:600;margin:0;color:#8b5cf6;">LO Conditions &amp; Notes</h3><button class="flex center" style="gap:6px;background:#8b5cf6;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;">+ Add Note</button></div>'+
+    (loConds.length===0?'<p style="font-size:13px;color:var(--text-muted);text-align:center;padding:24px;">No LO conditions yet</p>':
+    loConds.map(function(c){return '<div class="card" style="padding:14px;'+(c.status==="done"?"opacity:.7;":"")+'"><div class="flex" style="gap:10px;"><div class="cond-check" style="border:'+(c.status==="done"?"none":"2px solid var(--border-subtle)")+';background:'+(c.status==="done"?"#8b5cf6":"transparent")+';margin-top:0;">'+(c.status==="done"?'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>':"")+'</div>'+
+      '<div style="flex:1;"><p style="font-size:14px;margin:0;color:'+(c.status==="done"?"var(--text-muted)":"var(--text-primary)")+';text-decoration:'+(c.status==="done"?"line-through":"none")+';">'+esc(c.description)+'</p><p style="font-size:11px;color:var(--text-muted);margin:4px 0 0;">From '+esc(c.createdBy||"Megan")+'</p>'+
+      (c.loNote?'<div style="margin-top:8px;padding:8px 10px;border-radius:8px;background:rgba(59,130,246,0.08);border-left:3px solid #3b82f6;"><p style="font-size:9px;font-weight:700;text-transform:uppercase;color:#3b82f6;margin:0;">LO Reply</p><p style="font-size:13px;color:var(--text-secondary);margin:4px 0 0;">'+esc(c.loNote)+'</p></div>':'<button style="margin-top:8px;font-size:12px;font-weight:600;color:#3b82f6;background:none;border:none;cursor:pointer;padding:0;">+ Reply</button>')+'</div></div></div>';}).join(""))+'</div>';
+}
+function transcriptsTab(l){
+  var calls=CALL_RECORDS.filter(function(c){return c.loanId===l.id;});
+  if(!calls.length) return '<div style="padding:48px 16px;text-align:center;"><p style="font-size:14px;color:var(--text-muted);">No call transcripts for '+esc(l.borrowerName)+'</p><p style="font-size:12px;color:var(--text-muted);margin:4px 0 0;">Transcripts appear here automatically after calls are processed</p></div>';
+  return '<div style="padding:16px;display:flex;flex-direction:column;gap:16px;">'+calls.map(function(c){return '<div class="card" style="padding:16px;"><div class="flex between center" style="margin-bottom:10px;"><div class="flex center" style="gap:8px;">'+dirPill(c.direction)+'<span style="font-size:13px;font-weight:600;color:var(--text-primary);">'+esc(c.lo)+'</span></div><span style="font-size:12px;color:var(--text-muted);">'+esc(c.date)+' \u00B7 '+c.duration+'</span></div><div style="border-top:1px solid var(--border-subtle);padding-top:12px;">'+
+    c.transcript.map(function(t){return '<div class="transcript-line"><span class="transcript-spk" style="color:'+(t.spk.indexOf("Borrower")>=0?"var(--text-muted)":"var(--ccm-blue)")+';">'+esc(t.spk)+'</span><span class="transcript-txt">'+esc(t.t)+'</span></div>';}).join("")+'</div></div>';}).join("")+'</div>';
+}
+function emailTab(l){
+  var sample=[{from:"Carlos Reyes (Processor)",cat:"Processor",urg:"high",status:"pending",subj:"Conditions package ready",snippet:"Uploaded the latest conditions package. Need VOE before we can clear.",when:"2h ago"},{from:"FST Title",cat:"Title",urg:"medium",status:"resolved",subj:"Title commitment \u2014 cleared",snippet:"Title search complete. No outstanding liens.",when:"1d ago"}];
+  var urgColors={critical:{bg:"#dc2626",text:"#fff",label:"CRITICAL"},high:{bg:"#f59e0b",text:"#000",label:"HIGH"},medium:{bg:"#3b82f6",text:"#fff",label:"MED"},low:{bg:"#6b7280",text:"#fff",label:"LOW"}};
+  var sc={pending:"#f59e0b",in_progress:"#3b82f6",resolved:"#22c55e",no_action:"#6b7280"};
+  var count=EMAIL_COUNTS[l.id]||0;
+  if(!count) return '<div style="padding:48px 16px;text-align:center;"><p style="font-size:14px;color:var(--text-muted);">No tracked email activity for this loan</p></div>';
+  return '<div style="padding:16px;display:flex;flex-direction:column;gap:10px;"><p style="font-size:12px;color:var(--text-muted);margin:0 0 4px;">'+count+' tracked '+pluralize(count,"email")+'</p>'+
+    sample.map(function(e){ var u=urgColors[e.urg]; return '<div class="card" style="padding:14px;"><div class="flex between center" style="gap:8px;margin-bottom:6px;"><div class="flex center" style="gap:8px;"><span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;background:'+u.bg+';color:'+u.text+';">'+u.label+'</span><span style="font-size:11px;font-weight:600;padding:2px 6px;border-radius:4px;background:var(--bg-secondary);color:var(--text-secondary);">'+e.cat+'</span></div><span style="font-size:11px;color:var(--text-muted);">'+e.when+'</span></div>'+
+      '<p style="font-size:14px;font-weight:600;margin:0;color:var(--text-primary);">'+esc(e.subj)+'</p><p style="font-size:12px;color:var(--text-muted);margin:2px 0 6px;">'+esc(e.from)+'</p><p style="font-size:13px;color:var(--text-secondary);margin:0;">'+esc(e.snippet)+'</p><div class="flex center" style="gap:6px;margin-top:8px;"><div class="dot" style="background:'+sc[e.status]+';"></div><span style="font-size:11px;color:var(--text-muted);">'+e.status+'</span></div></div>';}).join("")+'</div>';
+}
+
+/* \u2550\u2550 RESPA SENT (was "Started") \u2550\u2550 */
+function renderRespaSent(){
+  var started=[
+    {b:"Quentin Ferraro",lo:"Austin Seifert",amt:298000,state:"OH",disc:"Pending 4d",cat:"pending"},
+    {b:"Maya Lindqvist",lo:"John Quinones",amt:215000,state:"OH",disc:"Signed",cat:"signed"},
+    {b:"Roy & Carol Tennison",lo:"Jerry Michael",amt:184500,state:"IN",disc:"Overdue 9d",cat:"overdue"},
+  ];
+  var grabs=[
+    {b:"Unassigned \u2014 Pell, D.",amt:262000,state:"OH",idle:11},
+    {b:"Unassigned \u2014 Okonkwo, B.",amt:331000,state:"IL",idle:8},
+  ];
+  function dc(c){ return c==="overdue"?"#ef4444":c==="signed"?"#22c55e":"#f59e0b"; }
+  document.getElementById("view-respa-sent").innerHTML=pageHeader("RESPA Sent","Active disclosure packages \u00B7 initial and re-disclosures")+
+    '<h2 style="font-size:17px;font-weight:700;margin:0 0 12px;color:var(--text-primary);">My RESPA Packages</h2>'+
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-bottom:36px;">'+
+      started.map(function(s){return '<div class="card '+(s.cat==="overdue"?"started-flash":"")+'" style="padding:16px;">'+
+        '<div class="flex between center" style="margin-bottom:8px;"><p style="font-size:15px;font-weight:600;margin:0;color:var(--text-primary);">'+esc(s.b)+'</p><span class="dot" style="background:'+dc(s.cat)+';"></span></div>'+
+        '<p style="font-size:13px;color:var(--text-secondary);margin:0 0 4px;">'+fmtFull(s.amt)+' \u00B7 '+s.state+' \u00B7 '+s.lo+'</p>'+
+        '<p style="font-size:12px;margin:0;color:'+dc(s.cat)+';font-weight:600;">Disclosures: '+s.disc+'</p>'+
+        '<div class="flex" style="gap:8px;margin-top:12px;"><button class="toggle-btn" style="flex:1;text-align:center;">Extend</button><button class="toggle-btn" style="flex:1;text-align:center;color:#ef4444;border-color:rgba(239,68,68,0.3);">Give Up</button></div></div>';}).join("")+'</div>'+
+    '<h2 style="font-size:17px;font-weight:700;margin:0 0 4px;color:var(--text-primary);">Up for Grabs</h2>'+
+    '<p style="font-size:12px;color:var(--text-muted);margin:0 0 14px;">Filtered to licensed states: OH, IL, IN, TX, NJ</p>'+
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;">'+
+      grabs.map(function(g){return '<div class="card started-flash" style="padding:16px;"><p style="font-size:15px;font-weight:600;margin:0 0 4px;color:var(--text-primary);">'+esc(g.b)+'</p>'+
+        '<p style="font-size:13px;color:var(--text-secondary);margin:0 0 4px;">'+fmtFull(g.amt)+' \u00B7 '+g.state+'</p>'+
+        '<p style="font-size:12px;color:#f59e0b;font-weight:600;margin:0;">Idle '+g.idle+' days</p>'+
+        '<button class="btn-primary" style="width:100%;margin-top:12px;padding:10px;border-radius:10px;">Claim Loan</button></div>';}).join("")+'</div>';
+}
+
+/* \u2550\u2550 FENDER BENDER \u2550\u2550 */
+function renderFenderBender(){
+  var fb=LOANS.filter(function(l){return l.fenderBender;});
+  var extra=[{borrowerName:"Curtis Halloran",loanOfficer:"Quincy Williams",loanAmount:241000,loanNumber:"1034000799001",fenderBenderNotes:"Appraisal came in $18k short \u2014 renegotiating purchase price.",fenderBenderReady:true},
+    {borrowerName:"Estelle Briggs",loanOfficer:"Jacob Fischer",loanAmount:176000,loanNumber:"1034000798220",fenderBenderNotes:"Title clouded by old judgment lien; payoff requested.",fenderBenderReady:false}];
+  var all=fb.concat(extra);
+  document.getElementById("view-fender-bender").innerHTML=pageHeader("Fender Bender Queue","Loans flagged with issues requiring resolution. Flagged manually by Devin &amp; Megan.")+
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;">'+
+      all.map(function(l){return '<div class="card" style="padding:16px;'+(l.fenderBenderReady?"background:linear-gradient(135deg,rgba(34,197,94,0.06) 0%,var(--bg-card) 100%);":"")+'">'+
+        '<div class="flex between center" style="margin-bottom:6px;"><p style="font-size:15px;font-weight:600;margin:0;color:var(--text-primary);">'+esc(l.borrowerName)+'</p><span class="chip" style="background:rgba(251,191,36,0.15);color:#f59e0b;border:1px solid rgba(251,191,36,0.3);">\uD83D\uDD27 FB</span></div>'+
+        '<p style="font-size:13px;color:var(--text-secondary);margin:0 0 2px;">#'+l.loanNumber+' \u00B7 '+fmtFull(l.loanAmount)+'</p>'+
+        '<p style="font-size:12px;color:var(--text-muted);margin:0 0 10px;">'+esc(l.loanOfficer)+'</p>'+
+        '<div style="border-top:1px solid var(--border-subtle);padding-top:10px;"><p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);margin:0 0 4px;">Issue</p><p style="font-size:13px;color:var(--text-secondary);margin:0;">'+esc(l.fenderBenderNotes)+'</p></div>'+
+        '<div class="flex" style="gap:8px;margin-top:10px;">'+(l.fenderBenderReady?'<div class="flex center" style="gap:6px;color:#16a34a;flex:1;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span style="font-size:12px;font-weight:600;">Ready to Resume</span></div>':'<button class="toggle-btn" style="flex:1;text-align:center;">Request Release</button>')+'<button class="toggle-btn" onclick="toast(\'Snoozed\')">Snooze</button><button class="toggle-btn" style="color:#ef4444;border-color:rgba(239,68,68,0.3);" onclick="toast(\'Dismissed\')">Dismiss</button></div></div>';}).join("")+'</div>';
+}
+
+/* \u2550\u2550 CREDIT PULLS \u2550\u2550 */
+function renderCreditPulls(){
+  var thisWeekPulls=CREDIT_PULLS.filter(function(p){return daysUntil(p.datePulled)>=-7;});
+  var pitched=thisWeekPulls.filter(function(p){return p.status==="Pitched";}).length;
+  var conv=thisWeekPulls.length>0?Math.round((pitched/thisWeekPulls.length)*100):0;
+  var statusStyles={Pulled:{bg:"rgba(59,130,246,0.12)",color:"#2563eb"},Pitched:{bg:"rgba(34,197,94,0.12)",color:"#16a34a"},"No Contact":{bg:"rgba(245,158,11,0.12)",color:"#d97706"},Dead:{bg:"rgba(107,114,128,0.1)",color:"#6b7280"}};
+
+  document.getElementById("view-credit-pulls").innerHTML=pageHeader("Credit Pulls","Track credit inquiries, FICO scores, and pull-to-pitch conversion")+
+    '<div class="kpi-grid" style="margin-bottom:22px;">'+
+      '<div class="kpi"><p class="klbl">Pulls This Week</p><p class="kval" style="color:var(--ccm-blue);">'+thisWeekPulls.length+'</p></div>'+
+      '<div class="kpi"><p class="klbl">Pitched</p><p class="kval" style="color:var(--success);">'+pitched+'</p></div>'+
+      '<div class="kpi"><p class="klbl">Conversion %</p><p class="kval" style="color:'+(conv>=50?"var(--success)":"var(--warning)")+';">'+conv+'%</p></div>'+
+      '<div class="kpi"><p class="klbl">Total Tracked</p><p class="kval">'+CREDIT_PULLS.length+'</p></div></div>'+
+    '<div class="card" style="overflow:hidden;overflow-x:auto;"><table class="credit-pull-table"><thead><tr style="border-bottom:1px solid var(--border-subtle);">'+
+      ["Borrower","Loan Officer","Date Pulled","Days Since","Bureau","FICO","Status",""].map(function(h){return '<th>'+h+'</th>';}).join("")+
+    '</tr></thead><tbody>'+
+    CREDIT_PULLS.map(function(p){
+      var dSince=Math.abs(Math.min(daysUntil(p.datePulled),0))||0;
+      var ficoColor=p.fico>=740?"#22c55e":p.fico>=680?"#f59e0b":"#ef4444";
+      var ss=statusStyles[p.status]||{bg:"rgba(107,114,128,0.1)",color:"#6b7280"};
+      return '<tr style="cursor:'+(p.loanId?"pointer":"default")+'" data-loan="'+(p.loanId||"")+'">'+
+        '<td style="font-weight:600;color:var(--text-primary);">'+esc(p.borrower)+'</td>'+
+        '<td style="color:var(--text-secondary);">'+esc(p.lo)+'</td>'+
+        '<td style="color:var(--text-muted);">'+new Date(p.datePulled).toLocaleDateString("en-US",{month:"short",day:"numeric"})+'</td>'+
+        '<td style="color:'+(dSince>=14?"#ef4444":dSince>=7?"#f59e0b":"var(--text-secondary)")+';">'+dSince+'d ago</td>'+
+        '<td><span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:9999px;background:rgba(16,50,207,0.1);color:var(--ccm-blue);">'+p.bureau+'</span></td>'+
+        '<td style="font-weight:700;color:'+ficoColor+';">'+p.fico+'</td>'+
+        '<td><span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:9999px;background:'+ss.bg+';color:'+ss.color+';">'+p.status+'</span></td>'+
+        '<td>'+(p.loanId?'<span style="font-size:11px;color:var(--ccm-accent);font-weight:600;cursor:pointer;" data-loan="'+p.loanId+'">View loan \u2192</span>':"")+'</td></tr>';
+    }).join("")+
+    '</tbody></table></div>';
+
+  document.querySelectorAll("#view-credit-pulls [data-loan]").forEach(function(el){ if(el.dataset.loan) el.addEventListener("click",function(){ openPanel(el.dataset.loan); }); });
+}
+
+/* \u2550\u2550 PERFORMANCE \u2550\u2550 */
+function renderPerformance(){
+  var fakeMetric={"Austin Seifert":{vol:1200000,funded:9,pipeline:4,conv:62},"John Quinones":{vol:1086500,funded:7,pipeline:3,conv:55},"Evan Liddington":{vol:1985000,funded:5,pipeline:2,conv:58},"Quincy Williams":{vol:598000,funded:6,pipeline:2,conv:48},"Jerry Michael":{vol:516000,funded:4,pipeline:2,conv:44},"Anthony Snodgrass":{vol:491500,funded:5,pipeline:2,conv:51},"Jacob Fischer":{vol:301000,funded:2,pipeline:1,conv:39}};
+  var rows=LOAN_OFFICERS.map(function(lo){ var m=fakeMetric[lo]; return {lo:lo,vol:m.vol,funded:m.funded,pipeline:m.pipeline,conv:m.conv}; }).sort(function(a,b){return b.vol-a.vol;});
+  document.getElementById("view-performance").innerHTML=pageHeader("Performance","Year-to-date production \u00B7 live scoreboard")+
+    '<div class="kpi-grid" style="margin-bottom:20px;">'+
+      '<div class="kpi"><p class="klbl">Total Funded Volume</p><p class="kval" style="color:var(--ccm-blue);">$6.18M</p></div>'+
+      '<div class="kpi"><p class="klbl">Units Closed</p><p class="kval">38</p></div>'+
+      '<div class="kpi"><p class="klbl">Active Pipeline</p><p class="kval">'+LOANS.length+'</p></div>'+
+      '<div class="kpi"><p class="klbl">Avg Pull-Through</p><p class="kval" style="color:var(--success);">52%</p></div></div>'+
+    '<div class="card" style="padding:24px;"><h2 class="section-title" style="margin-bottom:18px;">Live Scoreboard</h2><div style="overflow-x:auto;"><table class="lo-table"><thead><tr><th>Loan Officer</th><th style="text-align:center;">Funded</th><th style="text-align:center;">Active</th><th style="text-align:center;">Conv. Rate</th><th style="text-align:right;">Volume</th></tr></thead><tbody>'+
+    rows.map(function(r){return '<tr><td><div class="flex center" style="gap:10px;"><div class="avatar">'+initials(r.lo)+'</div><span style="font-weight:500;color:var(--text-primary);">'+r.lo+'</span></div></td>'+
+      '<td style="text-align:center;color:var(--text-secondary);">'+r.funded+'</td><td style="text-align:center;color:var(--text-secondary);">'+r.pipeline+'</td>'+
+      '<td style="text-align:center;"><span class="pill" style="background:'+(r.conv>=50?"rgba(34,197,94,0.15)":"rgba(245,158,11,0.15)")+';color:'+(r.conv>=50?"var(--success)":"var(--warning)")+';">'+r.conv+'%</span></td>'+
+      '<td style="text-align:right;font-weight:600;color:var(--ccm-accent);">'+fmtCur(r.vol)+'</td></tr>';}).join("")+'</tbody></table></div></div>';
+}
+
+/* \u2550\u2550 EMAIL ACTIVITY \u2550\u2550 */
+function renderEmailActivity(){
+  var rows=[
+    {b:"The Okafor Family Trust",lo:"Evan Liddington",cat:"Underwriting",urg:"critical",subj:"Resub needed \u2014 DTI recalculation",when:"24m ago",status:"pending"},
+    {b:"Sandra Whitfield",lo:"John Quinones",cat:"Title",urg:"high",subj:"Completion cert outstanding",when:"1h ago",status:"in_progress"},
+    {b:"Marcus & Tina Holloway",lo:"Austin Seifert",cat:"Borrower",urg:"low",subj:"Question about closing costs",when:"3h ago",status:"no_action"},
+    {b:"Yvette Carrington",lo:"Anthony Snodgrass",cat:"Processor",urg:"high",subj:"HOA cert still needed",when:"4h ago",status:"pending"},
+    {b:"Daniel & Rosa Iglesias",lo:"Quincy Williams",cat:"Agent",urg:"medium",subj:"Buyer agent requesting status",when:"5h ago",status:"resolved"},
+  ];
+  var urgColors={critical:{bg:"#dc2626",text:"#fff",label:"CRITICAL"},high:{bg:"#f59e0b",text:"#000",label:"HIGH"},medium:{bg:"#3b82f6",text:"#fff",label:"MED"},low:{bg:"#6b7280",text:"#fff",label:"LOW"}};
+  var sc={pending:"#f59e0b",in_progress:"#3b82f6",resolved:"#22c55e",no_action:"#6b7280"};
+  document.getElementById("view-email-activity").innerHTML=pageHeader("Email Activity","Outlook email intelligence synced into the pipeline")+
+    '<div class="card" style="overflow:hidden;overflow-x:auto;"><table><thead><tr style="border-bottom:1px solid var(--border-subtle);">'+
+      ["Urg","Borrower","LO","Category","Subject","When","Status"].map(function(h){return '<th style="text-align:left;padding:12px;font-size:11px;color:var(--text-muted);text-transform:uppercase;">'+h+'</th>';}).join("")+'</tr></thead><tbody>'+
+      rows.map(function(r){ var u=urgColors[r.urg]; return '<tr style="border-bottom:1px solid var(--border-subtle);">'+
+        '<td style="padding:12px;"><span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;background:'+u.bg+';color:'+u.text+';">'+u.label+'</span></td>'+
+        '<td style="padding:12px;font-size:13px;font-weight:600;color:var(--text-primary);">'+esc(r.b)+'</td>'+
+        '<td style="padding:12px;font-size:13px;color:var(--text-secondary);">'+esc(r.lo)+'</td>'+
+        '<td style="padding:12px;"><span style="font-size:11px;font-weight:600;padding:2px 6px;border-radius:4px;background:var(--bg-secondary);color:var(--text-secondary);">'+r.cat+'</span></td>'+
+        '<td style="padding:12px;font-size:13px;color:var(--text-primary);">'+esc(r.subj)+'</td>'+
+        '<td style="padding:12px;font-size:12px;color:var(--text-muted);">'+r.when+'</td>'+
+        '<td style="padding:12px;"><div class="flex center" style="gap:6px;"><div class="dot" style="background:'+sc[r.status]+';"></div><span style="font-size:12px;color:var(--text-muted);">'+r.status.replace("_"," ")+'</span></div></td></tr>';}).join("")+
+      '</tbody></table></div>';
+}
+
+/* \u2550\u2550 CALLS \u2550\u2550 */
+function dirPill(dir){
+  var inb=dir==="inbound";
+  var c=inb?{bg:"rgba(34,197,94,0.12)",fg:"#16a34a"}:{bg:"rgba(59,130,246,0.12)",fg:"#2563eb"};
+  var arrow=inb?'<path d="M7 17L17 7"/><polyline points="7 7 7 17 17 17"/>':'<path d="M17 7L7 17"/><polyline points="17 17 17 7 7 7"/>';
+  return '<span class="dir-pill" style="background:'+c.bg+';color:'+c.fg+';"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">'+arrow+'</svg>'+(inb?"Inbound":"Outbound")+'</span>';
+}
+var selectedCall = CALL_RECORDS[0].id;
+function renderCalls(){
+  var rows=CALL_RECORDS.map(function(c){
+    return '<tr class="call-row '+(c.id===selectedCall?"active":"")+'" data-call="'+c.id+'">'+
+      '<td style="font-weight:600;color:var(--text-primary);">'+esc(c.borrower)+'</td>'+
+      '<td style="color:var(--text-secondary);">'+esc(c.lo)+'</td>'+
+      '<td>'+dirPill(c.direction)+'</td>'+
+      '<td style="font-variant-numeric:tabular-nums;color:var(--text-secondary);">'+c.duration+'</td>'+
+      '<td style="color:var(--text-muted);white-space:nowrap;">'+esc(c.date)+'</td>'+
+      '<td><span style="font-size:11px;color:var(--ccm-accent);font-weight:600;">View \u2192</span></td></tr>';
+  }).join("");
+  document.getElementById("view-calls").innerHTML=pageHeader("Calls","Call log + Whisper transcripts \u00B7 synced from RingCentral")+
+    '<div style="display:grid;grid-template-columns:1.35fr 1fr;gap:16px;align-items:start;">'+
+      '<div class="card" style="overflow:hidden;"><div style="overflow-x:auto;"><table class="call-table"><thead><tr style="border-bottom:1px solid var(--border-subtle);">'+
+        ["Borrower","LO","Direction","Duration","Date/Time",""].map(function(h){return '<th>'+h+'</th>';}).join("")+
+        '</tr></thead><tbody>'+rows+'</tbody></table></div></div>'+
+      '<div id="transcript-panel"></div></div>';
+  document.querySelectorAll("#view-calls [data-call]").forEach(function(el){ el.addEventListener("click",function(){ selectedCall=el.dataset.call; renderCalls(); }); });
+  renderTranscriptPanel();
+}
+function renderTranscriptPanel(){
+  var c=CALL_RECORDS.filter(function(x){return x.id===selectedCall;})[0];
+  document.getElementById("transcript-panel").innerHTML='<div class="card" style="padding:18px;position:sticky;top:0;">'+
+    '<div class="flex between center" style="margin-bottom:6px;"><h3 style="font-size:15px;font-weight:700;margin:0;color:var(--text-primary);">'+esc(c.borrower)+'</h3>'+dirPill(c.direction)+'</div>'+
+    '<p style="font-size:12px;color:var(--text-muted);margin:0 0 14px;">'+esc(c.lo)+' \u00B7 '+esc(c.date)+' \u00B7 '+c.duration+'</p>'+
+    '<div style="border-top:1px solid var(--border-subtle);padding-top:14px;"><p style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ccm-blue);margin:0 0 12px;">Whisper Transcript</p>'+
+    c.transcript.map(function(t){return '<div class="transcript-line"><span class="transcript-spk" style="color:'+(t.spk.indexOf("Borrower")>=0?"var(--text-muted)":"var(--ccm-blue)")+';">'+esc(t.spk)+'</span><span class="transcript-txt">'+esc(t.t)+'</span></div>';}).join("")+'</div>'+
+    '<div class="flex" style="gap:8px;margin-top:14px;"><button class="btn-primary" style="flex:1;">Open Loan</button><button class="toggle-btn" style="flex:1;text-align:center;">Copy</button></div></div>';
+}
+
+/* \u2550\u2550 UPDATE QUEUE \u2550\u2550 */
+function renderUpdateQueue(){
+  var rows=[
+    {b:"Sandra Whitfield",field:"appraisal_back",old:"No",neu:"Yes",src:"Encompass sync",when:"12m ago"},
+    {b:"The Okafor Family Trust",field:"title_cleared",old:"No",neu:"Yes",src:"FST scrub",when:"40m ago"},
+    {b:"Imani Robeson",field:"stage",old:"Docs Sent",neu:"Final Approved",src:"Encompass sync",when:"1h ago"},
+  ];
+  document.getElementById("view-update-queue").innerHTML=pageHeader("Update Queue","Automated field changes awaiting manager review")+
+    '<div class="card" style="overflow:hidden;overflow-x:auto;"><table><thead><tr style="border-bottom:1px solid var(--border-subtle);">'+
+      ["Borrower","Field","Old","New","Source","When","Action"].map(function(h){return '<th style="text-align:left;padding:12px;font-size:11px;color:var(--text-muted);text-transform:uppercase;">'+h+'</th>';}).join("")+'</tr></thead><tbody>'+
+      rows.map(function(r){return '<tr style="border-bottom:1px solid var(--border-subtle);">'+
+        '<td style="padding:12px;font-size:13px;font-weight:600;color:var(--text-primary);">'+esc(r.b)+'</td><td style="padding:12px;font-size:13px;font-family:monospace;color:var(--text-secondary);">'+r.field+'</td>'+
+        '<td style="padding:12px;font-size:13px;color:#ef4444;">'+r.old+'</td><td style="padding:12px;font-size:13px;color:#22c55e;">'+r.neu+'</td>'+
+        '<td style="padding:12px;font-size:12px;color:var(--text-muted);">'+r.src+'</td><td style="padding:12px;font-size:12px;color:var(--text-muted);">'+r.when+'</td>'+
+        '<td style="padding:12px;"><div class="flex" style="gap:6px;"><button class="btn-primary" style="background:var(--success);padding:4px 10px;" onclick="toast(\'Approved\')">Approve</button><button class="toggle-btn" style="padding:4px 10px;" onclick="toast(\'Rejected\')">Reject</button></div></td></tr>';}).join("")+'</tbody></table></div>';
+}
+
+/* \u2550\u2550 HELP QUEUE \u2550\u2550 */
+function renderHelpQueue(){
+  var items=[
+    {t:"1003 Amendment Request",lo:"Austin Seifert",b:"Felix & Anna Brandt",sub:"prior_to_docs",when:"2h ago"},
+    {t:"Pricing Exception \u2014 Rate Lock Extension",lo:"Anthony Snodgrass",b:"Yvette Carrington",sub:"pricing_exception",when:"3h ago"},
+    {t:"Processing Review",lo:"John Quinones",b:"Sandra Whitfield",sub:"submission_review",when:"4h ago"},
+  ];
+  document.getElementById("view-help-queue").innerHTML=pageHeader("Help Queue","LO requests routed to Devin &amp; Megan for review")+
+    '<div style="display:flex;flex-direction:column;gap:12px;">'+items.map(function(it){
+      var subColors={prior_to_docs:{c:"#8b5cf6",bg:"rgba(139,92,246,0.1)"},pricing_exception:{c:"#ef4444",bg:"rgba(239,68,68,0.1)"},submission_review:{c:"#2563eb",bg:"rgba(37,99,235,0.1)"}};
+      var sc=subColors[it.sub]||{c:"#6b7280",bg:"rgba(107,114,128,0.1)"};
+      return '<div class="card" style="padding:16px;"><div class="flex between center" style="margin-bottom:8px;">'+
+        '<div><p style="font-size:15px;font-weight:600;margin:0;color:var(--text-primary);">'+esc(it.t)+'</p><p style="font-size:12px;color:var(--text-muted);margin:4px 0 0;">'+esc(it.lo)+' \u00B7 '+esc(it.b)+' \u00B7 '+it.when+'</p></div>'+
+        '<span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:9999px;background:'+sc.bg+';color:'+sc.c+';">'+it.sub.replace("_"," ")+'</span></div>'+
+        '<div class="flex" style="gap:8px;"><button class="btn-primary" style="padding:6px 14px;" onclick="toast(\'Assigned\')">Assign to Me</button><button class="toggle-btn" style="padding:6px 14px;" onclick="toast(\'Declined\')">Decline</button></div></div>';}).join("")+'</div>';
+}
+
+/* \u2550\u2550 TOOLKIT \u2550\u2550 */
+var toolkitTab="proptax";
+function renderToolkit(){
+  var tabs=[["proptax","Property Tax"],["contacts","Contacts"],["fees","Fees"],["payoffs","Payoffs"],["sidebyside","Side-by-Side"],["income","Income Analysis"],["amschedule","AM Schedule"],["debtcon","Debt Consolidator"],["grossup","Gross-Up"],["vairrrl","VA IRRRL"],["fhastream","FHA Streamline"],["blended","Blended Rate"]];
+  var active=tabs.filter(function(t){return t[0]===toolkitTab;})[0];
+  document.getElementById("view-toolkit").innerHTML=pageHeader("Toolkit","Calculators and reference tools")+
+    '<div class="flex" style="gap:6px;flex-wrap:wrap;margin-bottom:18px;border-bottom:1px solid var(--border-subtle);padding-bottom:12px;">'+
+      tabs.map(function(t){return '<button class="toolkit-tab '+(t[0]===toolkitTab?"active":"")+'" data-tk="'+t[0]+'">'+t[1]+'</button>';}).join("")+'</div>'+
+    '<div class="card" style="padding:24px;"><h3 style="font-size:16px;font-weight:600;margin:0 0 16px;color:var(--text-primary);">'+(active?active[1]:"Calculator")+'</h3>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:560px;">'+
+        '<div class="field"><p class="field-label">Loan Amount</p><div class="field-value"><p>$355,000</p></div></div>'+
+        '<div class="field"><p class="field-label">Interest Rate (%)</p><div class="field-value"><p>6.500</p></div></div>'+
+        '<div class="field"><p class="field-label">Term (months)</p><div class="field-value"><p>360</p></div></div>'+
+        '<div class="field"><p class="field-label">Property State</p><div class="field-value"><p>Ohio</p></div></div></div>'+
+      '<div class="card" style="margin-top:20px;padding:16px;background:var(--bg-secondary);max-width:560px;"><div class="flex between center"><span style="font-size:13px;color:var(--text-secondary);">Estimated Monthly P&amp;I</span><span style="font-size:20px;font-weight:700;color:var(--ccm-blue);">$2,244</span></div></div>'+
+      '<p style="font-size:12px;color:var(--text-muted);margin-top:16px;">Demo placeholder \u2014 the real toolkit includes 12+ interactive calculators with branded PDF export.</p></div>';
+  document.querySelectorAll("#view-toolkit [data-tk]").forEach(function(b){ b.addEventListener("click",function(){ toolkitTab=b.dataset.tk; renderToolkit(); }); });
+}
+
+/* \u2550\u2550 QUICK ACTIONS \u2550\u2550 */
+function renderQuickActions(){
+  var actions=[
+    {t:"New Loan Note",s:"Drop a quick note onto any active file",c:"#1032CF",bg:"rgba(16,50,207,0.1)",ico:'<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/>'},
+    {t:"Pull Credit",s:"Run a tri-merge credit pull",c:"#7c3aed",bg:"rgba(124,58,237,0.1)",ico:'<rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>',view:"credit-pulls"},
+    {t:"Order Title",s:"Open a new FST title order",c:"#1e40af",bg:"rgba(30,64,175,0.1)",ico:'<path d="M3 21h18M5 21V7l8-4 8 4v14M9 21v-6h6v6"/>'},
+    {t:"Schedule Closing",s:"Book a closing date & time",c:"#16a34a",bg:"rgba(34,197,94,0.1)",ico:'<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>'},
+    {t:"Open Encompass",s:"Launch the Encompass web client",c:"#0271E3",bg:"rgba(2,113,227,0.1)",ico:'<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>'},
+    {t:"Send LO Card",s:"DM a daily report card via Teams",c:"#d97706",bg:"rgba(217,119,6,0.1)",ico:'<path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/>'},
+    {t:"Pull Pipeline Report",s:"Export current pipeline to CSV",c:"#0891b2",bg:"rgba(8,145,178,0.1)",ico:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>'},
+    {t:"Log a Call",s:"Manually log an outbound call",c:"#16a34a",bg:"rgba(34,197,94,0.1)",ico:'<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/>',view:"calls"},
+    {t:"Run a Calculator",s:"Jump into the LO Toolkit",c:"#475569",bg:"rgba(71,85,105,0.1)",ico:'<rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="11" x2="8" y2="11"/><line x1="12" y1="11" x2="12" y2="11"/>',view:"toolkit"},
+  ];
+  document.getElementById("view-quick-actions").innerHTML=pageHeader("Quick Actions","One-click launchers for the things you do all day")+
+    '<div class="qa-grid">'+actions.map(function(a){return '<button class="qa-tile" data-qa-view="'+(a.view||"")+'"><div class="qa-icon" style="background:'+a.bg+';color:'+a.c+';"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+a.ico+'</svg></div><p class="qa-title">'+a.t+'</p><p class="qa-sub">'+a.s+'</p></button>';}).join("")+'</div>';
+  document.querySelectorAll("#view-quick-actions [data-qa-view]").forEach(function(b){ b.addEventListener("click",function(){
+    if(b.dataset.qaView) switchView(b.dataset.qaView);
+    else toast(b.querySelector(".qa-title").textContent+" \u2014 launched"); }); });
+}
+
+/* \u2550\u2550 PERSONAL \u2550\u2550 */
+var todos=[
+  {t:"Call Yvette re: rate-lock extension cost",done:false},
+  {t:"Review Brianna Coleslaw DTI restructure plan",done:false},
+  {t:"Send Friday LO report cards via Teams",done:true},
+  {t:"Confirm Pemberton closing logistics for Fri",done:false},
+  {t:"Follow up with FST on Whitfield title",done:true},
+];
+var notesContent="Megan out Thu PM \u2014 cover Help Queue.\n\nBranch huddle Mon 9am: pull-through is 52%, push for 55% by EOM.\n\nAsk IT about VMP appraisal portal credentials for Jacob.";
+function renderPersonal(){
+  var wx={temp:71,feels:69,code:"Partly cloudy",hi:77,lo:58,wind:8,humidity:54,city:"Cleveland, OH"};
+  var hourly=[["9 AM",66,"\u2600\uFE0F"],["12 PM",73,"\u26C5"],["3 PM",77,"\u26C5"],["6 PM",70,"\u2601\uFE0F"],["9 PM",62,"\u2601\uFE0F"]];
+  document.getElementById("view-personal").innerHTML=pageHeader("Personal","Your private workspace")+
+    '<div class="personal-grid">'+
+      '<div><div class="card section" style="margin:0 0 16px;"><div class="flex between center" style="margin-bottom:14px;"><h2 class="section-title">To-Do</h2><span class="pill" style="background:rgba(16,50,207,0.1);color:var(--ccm-blue);">'+todos.filter(function(t){return !t.done;}).length+' open</span></div>'+
+        todos.map(function(t,i){return '<div class="todo-item"><div class="todo-check '+(t.done?"done":"")+'" data-todo="'+i+'">'+(t.done?'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>':"")+'</div><span class="todo-txt '+(t.done?"done":"")+'">'+esc(t.t)+'</span></div>';}).join("")+
+        '<div class="flex" style="gap:8px;margin-top:10px;"><input id="todo-new" class="search-input" style="padding-left:14px;" placeholder="Add a task..."/></div></div>'+
+      '<div class="card section" style="margin:0;"><h2 class="section-title" style="margin-bottom:12px;">Scratch Notes</h2><textarea class="notes-pad" id="notes-pad">'+esc(notesContent)+'</textarea><p style="font-size:11px;color:var(--text-muted);margin:8px 0 0;">Local only.</p></div></div>'+
+      '<div class="weather-card"><div class="flex between center" style="margin-bottom:4px;"><span style="font-size:14px;font-weight:600;opacity:.95;">'+wx.city+'</span><span style="font-size:12px;opacity:.8;">Now</span></div>'+
+        '<div class="flex center" style="gap:14px;margin:8px 0 4px;"><span style="font-size:52px;font-weight:300;line-height:1;">'+wx.temp+'\u00B0</span><div><p style="font-size:15px;font-weight:600;margin:0;">'+wx.code+'</p><p style="font-size:12px;opacity:.85;margin:2px 0 0;">Feels '+wx.feels+'\u00B0 \u00B7 H:'+wx.hi+'\u00B0 L:'+wx.lo+'\u00B0</p></div></div>'+
+        '<div class="flex" style="gap:18px;margin:14px 0;font-size:12px;opacity:.9;"><span>\uD83D\uDCA8 '+wx.wind+' mph</span><span>\uD83D\uDCA7 '+wx.humidity+'%</span></div>'+
+        '<div class="flex between" style="border-top:1px solid rgba(255,255,255,.25);padding-top:14px;">'+hourly.map(function(h){return '<div style="text-align:center;"><p style="font-size:11px;opacity:.85;margin:0;">'+h[0]+'</p><p style="font-size:18px;margin:4px 0;">'+h[2]+'</p><p style="font-size:13px;font-weight:600;margin:0;">'+h[1]+'\u00B0</p></div>';}).join("")+'</div>'+
+        '<p style="font-size:10px;opacity:.7;margin:14px 0 0;">Sample data \u00B7 Open-Meteo style</p></div></div>';
+  document.querySelectorAll("#view-personal [data-todo]").forEach(function(el){ el.addEventListener("click",function(){ todos[+el.dataset.todo].done=!todos[+el.dataset.todo].done; renderPersonal(); }); });
+  var np=document.getElementById("notes-pad"); if(np) np.addEventListener("input",function(e){ notesContent=e.target.value; });
+  var ti=document.getElementById("todo-new"); if(ti) ti.addEventListener("keydown",function(e){ if(e.key==="Enter"&&e.target.value.trim()){ todos.push({t:e.target.value.trim(),done:false}); renderPersonal(); } });
+}
+
+/* \u2550\u2550 SETTINGS \u2550\u2550 */
+function renderSettings(){
+  document.getElementById("view-settings").innerHTML=pageHeader("Settings","Application preferences and integrations")+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">'+
+      '<div class="card section"><h2 class="section-title" style="margin-bottom:16px;">Appearance</h2>'+
+        '<p style="font-size:13px;color:var(--text-secondary);margin:0 0 12px;">Theme preference is set via the toggle in the top bar (\u2600\uFE0F/\uD83C\uDF19).</p>'+
+        '<button class="btn-primary" onclick="document.getElementById(\'theme-toggle\').click()">Toggle Theme</button></div>'+
+      '<div class="card section"><h2 class="section-title" style="margin-bottom:16px;">Integrations</h2>'+
+        ['Encompass API','Supabase DB','Microsoft Teams','Outlook Email','RingCentral Calls'].map(function(s){ return '<div class="flex between center" style="margin-bottom:10px;"><span style="font-size:13px;color:var(--text-primary);">'+s+'</span><span class="pill" style="background:rgba(34,197,94,0.12);color:#16a34a;">Connected</span></div>'; }).join("")+'</div></div>';
+}
+
+/* \u2550\u2550 COMMAND PALETTE \u2550\u2550 */
+var paletteOpen=false, paletteQuery="";
+function openPalette(){ paletteOpen=true; paletteQuery=""; renderPalette(); setTimeout(function(){ var s=document.getElementById("palette-search"); if(s)s.focus(); },20); }
+function closePalette(){ paletteOpen=false; document.getElementById("palette-root").innerHTML=""; }
+function renderPalette(){
+  if(!paletteOpen){ document.getElementById("palette-root").innerHTML=""; return; }
+  var q=paletteQuery.toLowerCase().trim();
+  var viewItems=ALL_NAV.filter(function(n){return !q||n.label.toLowerCase().indexOf(q)>=0;}).map(function(n){return {type:"view",key:n.key,title:n.label,sub:"Go to view"};});
+  var loanItems=LOANS.filter(function(l){return !q||l.borrowerName.toLowerCase().indexOf(q)>=0||l.loanNumber.indexOf(q)>=0;}).slice(0,6).map(function(l){return {type:"loan",key:l.id,title:l.borrowerName,sub:"#"+l.loanNumber};});
+  var html='<input id="palette-search" class="palette-search" placeholder="Search loans and views..." value="'+esc(paletteQuery)+'"/><div class="palette-list">';
+  if(viewItems.length) html+='<div class="palette-group">Views</div>'+viewItems.map(paletteRow).join("");
+  if(loanItems.length) html+='<div class="palette-group">Loans</div>'+loanItems.map(paletteRow).join("");
+  if(!viewItems.length&&!loanItems.length) html+='<div style="padding:24px;text-align:center;color:var(--text-muted);font-size:13px;">No matches</div>';
+  html+='</div>';
+  document.getElementById("palette-root").innerHTML='<div class="palette-overlay" id="palette-overlay"><div class="palette">'+html+'</div></div>';
+  document.getElementById("palette-overlay").addEventListener("click",function(e){ if(e.target.id==="palette-overlay")closePalette(); });
+  var s=document.getElementById("palette-search");
+  s.addEventListener("input",function(e){ paletteQuery=e.target.value; var pos=e.target.selectionStart; renderPalette(); var ns=document.getElementById("palette-search"); if(ns){ns.focus();try{ns.setSelectionRange(pos,pos);}catch(x){}} });
+  document.querySelectorAll("#palette-root [data-pal]").forEach(function(el){ el.addEventListener("click",function(){
+    var type=el.dataset.palType, key=el.dataset.pal; closePalette();
+    if(type==="view") switchView(key);
+    else if(type==="loan"){ if(currentView!=="pipeline")switchView("pipeline"); openPanel(key); }
+  }); });
+}
+function paletteRow(it){
+  var icon=it.type==="loan"?'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ccm-blue)" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/></svg>':'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>';
+  return '<div class="palette-item" data-pal="'+it.key+'" data-pal-type="'+it.type+'">'+icon+'<span class="pi-title">'+esc(it.title)+'</span><span class="pi-sub">'+esc(it.sub)+'</span></div>';
+}
+
+/* \u2550\u2550 TOAST \u2550\u2550 */
+function toast(msg){ var root=document.getElementById("toast-root"); root.innerHTML='<div class="toast">'+esc(msg)+'</div>'; setTimeout(function(){ root.innerHTML=""; },2600); }
+
+/* \u2550\u2550 WIRE-UP \u2550\u2550 */
+document.getElementById("cmdk-chip").addEventListener("click",openPalette);
+document.addEventListener("keydown",function(e){
+  if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="k"){ e.preventDefault(); paletteOpen?closePalette():openPalette(); }
+  if(e.key==="Escape"){ if(paletteOpen)closePalette(); else if(panelLoan)closePanel(); }
+});
+
+renderNav();
+renderOverview();
+</script>
+</body>
+</html>
